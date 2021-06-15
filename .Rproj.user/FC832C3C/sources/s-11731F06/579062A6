@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1623764557848.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "579062A6",
+    "lastKnownWriteTime" : 1623764747,
+    "last_content_update" : 1623764747256,
+    "path" : "C:/Users/Tim/Dropbox/RaukR/ReMIXTURE/src/code.cpp",
+    "project_path" : "src/code.cpp",
+    "properties" : {
+        "cursorPosition" : "24,1",
+        "scrollLine" : "2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "cpp"
+}

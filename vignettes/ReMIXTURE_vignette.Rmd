@@ -1,0 +1,36 @@
+---
+title: "ReMIXTURE_vignette"
+author: "Tim"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+
+vignette: >
+  %\VignetteIndexEntry{ReMIXTURE_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+# replace this with your package name
+library(ReMIXTURE)
+```
+
+# The greatest package for doing nothing useful
+
+```{r,echo=T}
+# Look!
+sayname(10)
+
+# Also, this package has this great dataset:
+rmdata
+```
+
+# Future plans
+
+Nothing. At all.

@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1623760585746.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4DBDAFC1",
+    "lastKnownWriteTime" : 1623764478,
+    "last_content_update" : 1623764478992,
+    "path" : "C:/Users/Tim/Dropbox/RaukR/ReMIXTURE/R/ReMIXTURE.R",
+    "project_path" : "R/ReMIXTURE.R",
+    "properties" : {
+        "cursorPosition" : "18,2",
+        "scrollLine" : "5"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,18 @@
+Package: ReMIXTURE
+Type: Package
+Title: Currently very little.
+Version: 0.0.9000
+Author: Me
+Maintainer: Absent
+License: CC0
+Description: Not even worth mentioning
+    ... really it's not
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 2.10)
+RoxygenNote: 7.1.1
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
