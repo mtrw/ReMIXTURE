@@ -1,4 +1,4 @@
-
+#These scripts are be re-written as a package (in progess currently), see mttrw/ReMIXTURE2
 
 setwd("") #set as appropriate
 source("https://raw.githubusercontent.com/mtrw/tim_r_functions/master/tim_functions.R") #will also load some required packages and convenience functions.
@@ -8,7 +8,6 @@ library(pheatmap)
 
 
 dm <- readRDS("MATRIX.Rds") #a matrix of similarities (e.g., IBS scores, where higher=more similar) between individuals, where the row and column names give the regions from which the sample comes. Naturally, the individuals should be in the same order along rows and columns. Also, importantly, the regions MUST be grouped together, e.g. Regions(rows) = A,A,A,C,C,D,D,D,D,D,B,B and NOT A,B,D,A,C,C,A, ...
-dm[lower.tri(dm)] <- dm[upper.tri(dm)] #assure it's symmetrical
 
 #index the positions of each region group
 gplist$offset <- c(0,rle(gpcol)$lengths) %>% `[`(-length(.)) %>% cumsum %>% `+`(1)
@@ -166,24 +165,11 @@ ldat <- cnormed[p1 != p2][, data.table(
 
 #Do the plots
 for(i in unique(ldat$region)){
-  P <- p +
-    geom_spatial_path(data=ldat[region==i],aes(x=y,y=x,alpha=count,size=count),colour=centres[region==i]$col,lineend="round") +
+wait("Hit ENTER to print next plot")
+p + geom_spatial_path(data=ldat[region==i],aes(x=y,y=x,alpha=count,size=count),colour=centres[region==i]$col,lineend="round") +
     geom_spatial_polygon(data=cdat[region==i],aes(x=x,y=y,group=region),fill=centres[region==i]$col) +
     theme(legend.position = "none")
-  print(P)
 }
-
-#... or in case you'd like to save them
-# dev.off()
-# pdf("ReMIXTURE_geospatial.pdf",height=5,width=5,onefile = TRUE)
-# for(i in unique(ldat$region)){
-#   P <- p +
-#     geom_spatial_path(data=ldat[region==i],aes(x=y,y=x,alpha=count,size=count),colour=centres[region==i]$col,lineend="round") +
-#     geom_spatial_polygon(data=cdat[region==i],aes(x=x,y=y,group=region),fill=centres[region==i]$col) +
-#     theme(legend.position = "none")
-#   print(P)
-# }
-# dev.off()
 
 
 #Plot superimposition of top two (or more) RGOs for each region
