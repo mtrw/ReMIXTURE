@@ -1,9 +1,7 @@
-#' ReMIXTURE
-#'
 #' Regionwise similarity analysis using a resampled nearest-neighbour method.
 #'
 #' @section Warning:
-#' Under development.
+#' This R6 implementation is under development. Occasional bugs are still coming to light.
 #'
 #' @return A ReMIXTURE class object.
 #' @examples
@@ -80,7 +78,7 @@ ReMIXTURE <- R6::R6Class(
     #' Run the ReMIXTURE analysis. Requires the information table to have been provided upon initialisation or later with $info_table().
     #' @param iterations The number of samplings requested.
     #' @param resample A length two numeric vector in the format c(`iterations`,`proportion`). If `iterations`>100 and 0.1<=`proportion`<=0.9, then $run_resampling() will be automatically run with `iterations` and `proportions` as arguments.
-    #' @param parallelize If TRUE, then all available cores will be used for an analysis
+    #' @param parallelize An integer indicating how many cores are available to use. Parallel processing is available on Linux-based systems only currently. Leave as default (1L) to disable parallisation.
     #' @return Nothing
     run = function(iterations=1000, resample=c(0,0), parallelize = 1){
       #run the method to fill private$counts (define this somewhere else for clarity and call it here)
