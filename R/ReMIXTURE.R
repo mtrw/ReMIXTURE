@@ -98,29 +98,23 @@ ReMIXTURE <- R6::R6Class(
       #set up some vectors to store info later
       blocksize <- sampsize * nrow(gplist)
       outsize <- iterations * blocksize
-      select <- vector(mode="integer",length=blocksize) #to store a list of the randomly selected samples each iteration
       raw_out <- data.table::data.table( #to store raw output each iteration
         p1 = character(length=outsize),
         p2 = character(length=outsize),
         dist = numeric(length=outsize)
       )
 
-      #multicore management
-      out <- if(parallelize==1) {1} else { max( 1  ,  (parallelize*(iterations/blocksize))**(1/2) %>% round ) } #assign this many to iterations loop
-      inn <- if(parallelize==1) {1} else { max( 1  ,  (parallelize*(blocksize/iterations))**(1/2) %>% round ) } #assign this many to matrix loop
-
-
-
       #run the iterations
-      mclapply( mc.cores = out , seq( 1 , outsize-blocksize+1 , by=blocksize ), function(top_row){ #one mclapply call here. should give the top row of raw_out to write
-        #fill the `select` vector
-        #dev iteration = 1
+      l_ply( seq( 1 , outsize-blocksize+1 , by=blocksize ), function(top_row){ #one mclapply call here. should give the top row of raw_out to write
+        #initialise and fill the `select` vector
+        select <- vector(mode="integer",length=blocksize) #to store a list of the randomly selected samples each iteration
+          #dev iteration = 1
         gplist[,{
           select[(sampsize*(idx-1)+1):((sampsize*(idx-1))+sampsize)] <<- sample(N,sampsize)-1+offset
         },by="idx"] %>% invisible
 
         #Find closest neighbours for the selected sample, store results in output table
-        mclapply(1:blocksize,function(i){# dm[select,select],1,function(r){ #mclapply call here, must have prior knowledge in each round of the rownums of raw_out to which it will write (which will be the iterated-overt thing, and based on the top_row given in the outer loop)
+        mclapply( mc.cores=parallelize , 1:blocksize,function(i){# dm[select,select],1,function(r){ #mclapply call here, must have prior knowledge in each round of the rownums of raw_out to which it will write (which will be the iterated-overt thing, and based on the top_row given in the outer loop)
           raw_out[top_row+i-1]$p1 <<- colnames(dm)[select[i]]
           raw_out$p2[top_row+i-1] <<- colnames(dm)[select][which(dm[select[i],select]==min(dm[select[i],select]))[1]]
           raw_out$dist[top_row+i-1] <<- min(dm[select[i],select])
