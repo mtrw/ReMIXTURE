@@ -106,8 +106,8 @@ ReMIXTURE <- R6::R6Class(
       )
 
       #multicore management
-      out <- max( 1  ,  (parallelize*(iterations/blocksize))**(1/2) %>% round ) #assign this many to iterations loop
-      inn <- max( 1  ,  (parallelize*(blocksize/iterations))**(1/2) %>% round ) #assign this many to matrix loop
+      out <- if(parallelize==1) {1} else { max( 1  ,  (parallelize*(iterations/blocksize))**(1/2) %>% round ) } #assign this many to iterations loop
+      inn <- if(parallelize==1) {1} else { max( 1  ,  (parallelize*(blocksize/iterations))**(1/2) %>% round ) } #assign this many to matrix loop
 
 
 
