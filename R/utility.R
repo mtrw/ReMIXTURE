@@ -4,6 +4,12 @@ NULL
 NULL
 #' @import R6
 NULL
+#' @importFrom plyr l_ply
+NULL
+#' @importFrom parallel mclapply
+NULL
+
+
 
 ce <- function(...){   cat(paste0(...,"\n"), sep='', file=stderr()) %>% eval(envir = globalenv() ) %>% invisible() }
 nu <-function(x){

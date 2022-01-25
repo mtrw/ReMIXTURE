@@ -2,21 +2,18 @@
 % Please edit documentation in R/ReMIXTURE.R
 \name{ReMIXTURE}
 \alias{ReMIXTURE}
-\title{ReMIXTURE}
+\title{Regionwise similarity analysis using a resampled nearest-neighbour method.}
 \value{
 A ReMIXTURE class object.
 }
 \description{
-ReMIXTURE
+Regionwise similarity analysis using a resampled nearest-neighbour method.
 
-ReMIXTURE
-}
-\details{
 Regionwise similarity analysis using a resampled nearest-neighbour method.
 }
 \section{Warning}{
 
-Under development.
+This R6 implementation is under development. Occasional bugs are still coming to light.
 }
 
 \examples{
@@ -99,7 +96,7 @@ Run the ReMIXTURE analysis. Requires the information table to have been provided
 
 \item{\code{resample}}{A length two numeric vector in the format c(`iterations`,`proportion`). If `iterations`>100 and 0.1<=`proportion`<=0.9, then $run_resampling() will be automatically run with `iterations` and `proportions` as arguments.}
 
-\item{\code{parallelize}}{If TRUE, then all available cores will be used for an analysis}
+\item{\code{parallelize}}{An integer indicating how many cores are available to use. Parallel processing is available on Linux-based systems only currently. Leave as default (1L) to disable parallisation.}
 }
 \if{html}{\out{</div>}}
 }
