@@ -2,7 +2,10 @@
 
 export(ReMIXTURE)
 import(R6)
-importFrom(data.table,data.table)
+import(data.table)
+import(ggplot2)
+import(ggspatial)
+import(pheatmap)
+import(plyr)
+import(rnaturalearth)
 importFrom(magrittr,`%>%`)
-importFrom(parallel,mclapply)
-importFrom(plyr,l_ply)
