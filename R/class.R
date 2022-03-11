@@ -92,7 +92,7 @@ ReMIXTURE <- R6::R6Class(
       ce("\tSaving input to object ...")
       private$m <- distance_matrix
       diag(private$m) <- Inf
-      private$rt <- in_rt
+      private$rt <- region_table
 
 
       ################################################################################################
