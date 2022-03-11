@@ -10,7 +10,9 @@ ReMIXTURE$set( "active" , "distance_matrix" ,
 
 
 
-
+#' @description
+#' getset region table
+#' @return table
 ReMIXTURE$set( "active" , "region_table" ,
   function(){
     rt <- copy(private$rt)
@@ -36,10 +38,17 @@ ReMIXTURE$set( "active" , "results" ,
           subsample_proportion = private$pr_samp,
           h_clustering_cutoff = private$hcut
         ),
-        diversity_nclusts = private$diversity,
-        var_diversity_nclusts = private$var_diversity,
-        overlapping_nclusts = private$overlap,
-        var_overlapping_nclusts = private$var_overlap
+        run = list (
+          diversity_nclusts = private$diversity,
+          var_diversity_nclusts = private$var_diversity,
+          overlapping_nclusts = private$overlap,
+          var_overlapping_nclusts = private$var_overlap
+        ),
+        plot = list (
+          plot_circles_diversity = private$plot_circles_diversity,
+          plot_circles_uniqueness = private$plot_circles_uniqueness,
+          plot_lines_overlap = private$plot_lines_overlap
+        )
       )
     )
   }

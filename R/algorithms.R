@@ -11,16 +11,28 @@ ReMIXTURE$set( "public" , "run" ,
     ce("Running ReMixture analysis ...")
     ce("------------------------------------------------\n")
 
+
+    ce("\tResetting results fields and flags")
+    private$diversity <- NULL
+    private$var_diversity <- NULL
+    private$overlap <- NULL
+    private$var_overlap <- NULL
+    private$runflag <- FALSE
+
+    private$plot_circles_diversity <- NULL
+    private$plot_circles_uniqueness <- NULL
+    private$plot_lines_overlap <- NULL
+    private$plotflag <- FALSE
+
+
     ce("\tSetting up local variables and containers ...")
     #local params
     nits <- iterations
     pr_samp <- subsample_proportion
     hcut <- h_cutoff
-
     if(is.null(hcut)){
-      stop("h_cutoff not provided or set up in advance. Please provide one, preferebly based on the insights of `$test_h_cutoffs()`")
+      stop("h_cutoff not provided or set up in advance. Please provide one, preferably based on the insights of `$test_h_cutoffs()`")
     }
-
     ind_info <- data.table(
       gp=colnames(private$m),
       idx=1:ncol(private$m)
@@ -70,7 +82,7 @@ ReMIXTURE$set( "public" , "run" ,
       counts_mat <- counts_mat + counts_mat_accumulator
       counts_2_mat <- counts_2_mat + counts_mat_accumulator**2
     }
-    ce("Summarising and saving results ...")
+    ce("\tSummarising and saving results ...")
 
     private$overlap <- counts_mat / nits
     private$var_overlap <- (counts_2_mat/nits) - (counts_mat/nits)**2
@@ -78,7 +90,7 @@ ReMIXTURE$set( "public" , "run" ,
     private$var_diversity <- (nclust_counts_2/nits) - (nclust_counts/nits)**2
     private$runflag <- TRUE
 
-    ce("Updating parameter records ...")
+    ce("\tUpdating parameter records ...")
     private$nits <- nits
     private$hcut <- hcut
     private$pr_samp <- pr_samp

@@ -30,13 +30,18 @@ ReMIXTURE <- R6::R6Class(
 
 
     ################################ RESULTS #########################################
-    diversity = matrix(), # average number of clusters per region
-    var_diversity = numeric(), # variance of number of clusters per region
-    overlap = matrix(), # average number of region-overlapping / region-unique (diagonal) clusters per region
-    var_overlap = numeric(), # variance of number of region-overlapping / region-unique (diagonal) clusters per region
+    diversity = NULL, # average number of clusters per region
+    var_diversity = NULL, # variance of number of clusters per region
+    overlap = NULL, # average number of region-overlapping / region-unique (diagonal) clusters per region
+    var_overlap = NULL, # variance of number of region-overlapping / region-unique (diagonal) clusters per region
 
-    runflag = FALSE #flags a run has been done, results computed and saved
+    plot_circles_diversity = NULL,
+    plot_circles_uniqueness = NULL,
+    plot_lines_overlap = NULL,
 
+
+    runflag = FALSE, #flags a run has been done, results computed and saved
+    plotflag = FALSE #flags a plot has been done, results computed and saved
   ),
 
 

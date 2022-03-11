@@ -112,6 +112,8 @@ function(alpha_norm_per_region,lon_angle=0,lat_angle=0,width_lims=c(5,35),alpha_
     rounded_line(x1_,y1_,x2_,y2_,w_)[,col:=c_][,region:=r_][,idx:=i][,alpha:=a_]#add gp later
   }) %>% setDT
 
+  ce("Plotting. Raw plot data is now accessible via `$results`")
+
   pp <- p + geom_spatial_polygon(data = ldat, aes(x = x, y = y , fill=col , group=region)) +
     scale_fill_identity() +
     facet_wrap("region",ncol=4)
