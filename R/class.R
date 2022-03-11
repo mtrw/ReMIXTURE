@@ -12,6 +12,11 @@ ReMIXTURE <- R6::R6Class(
     m = matrix(), # a distance matrix with rownames and colnames giving regions
     rt = data.table(), # region table, an info table with columns "region", "lat" , "long" , and optionally "colour"
 
+
+
+
+
+
     ################################ PARAMETERS ######################################
 
     #### ALGORITHM #####

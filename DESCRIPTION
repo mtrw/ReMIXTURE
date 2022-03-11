@@ -1,16 +1,15 @@
 Package: ReMIXTURE
-Type: Package
-Title: ReMIXTURE: Pretty and enlightening regionwise "similarity" plots using arbitrary distance matricies.
+Title: Pretty and enlightening region-wise "similarity" plots built using arbitrary distance matricies between individual samples from each region. Conceived for genetic distance data but probably has wider applications.
 Version: 0.1.0
-Author: Rabanus-Wallace, M.T.
-Maintainer: mtrw85@gmail.com
-License: CC0
-Description: Regionwise similarity plots for collections of objects with known 
-    inter-object distances and some 'region' property, using a method of resampling and heirarchical clustering. An earlier version of this method is described in Rabanus-Wallace & Tripodi et al. (2021), this newer version differs significantly, with the algorithm updated to give much more intuitively interpretable results.
+Authors@R: 
+    person("M Timothy", "Rabanus-Wallace", , "mtrw85@gmail.com", role = c("aut", "cre"))
+Description: Begins by using an algorithm to take data from collections of items with known inter-item distances and some 'region' property, calculate an overlap statistic between regions suitable to questions like "how similar is the collection of chilli peppers collected in this region to the collections found in other regions". Comparable values are given to describe the total "diversity" of items in each region, and the proportion of items that are unique to a region.
+    Then it plots these overlaps, diversity, and uniqueness scores as lines connecting regions on a globe.
+    An earlier version of this method is described in Rabanus-Wallace & Tripodi et al. (2021), this newer version differs significantly, with the algorithm updated to give much more intuitively interpretable results.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends: 
-    R (>= 2.10)
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports:
     data.table,
@@ -31,4 +30,3 @@ Collate:
     getset.R
     algorithms.R
     plotting.R
-    
