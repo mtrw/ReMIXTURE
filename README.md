@@ -1,9 +1,7 @@
 # ReMIXTURE
 
-WARNING: A newer version of the ReMIXTURE method has been developed that greatly improves the method's tolerance of sampling biases, produces more intuitive results, and runs much faster. This message will be removed on initial commit of the newer version, once it has been implemented as an R package. If you are reading this and intend on using ReMIXTURE, please email Tim (mtrw85@gmail.com) to discuss running the new version instead.
+A newer version of the ReMIXTURE method whose concept was first attempted in Rabanus-Wallace & Tripodi et al. (2021) Global range expansion history of pepper (Capsicum spp.) revealed by over 10,000 genebank accessions. PNAS August 24, 2021 118 (34) e2104315118; https://doi.org/10.1073/pnas.2104315118; https://www.pnas.org/content/118/34/e2104315118 (But please use sci-hub if possible)
 
-As described in this publication:
+This version overcomes several sources of bias that risk producing unintuitive results in the initial version. It also runs a lot faster and makes prettier graphs. New features will include proper vignettes with a clear method description, more control over the plot output, tools to explore the influence of algorithm parameters and set them in a more standardised way, and more checks and bug fixes.
 
-Rabanus-Wallace & Tripodi et al. (2021) Global range expansion history of pepper (Capsicum spp.) revealed by over 10,000 genebank accessions. PNAS August 24, 2021 118 (34) e2104315118; https://doi.org/10.1073/pnas.2104315118
-
-https://www.pnas.org/content/118/34/e2104315118 (But please use sci-hub if possible)
+Any questions, please email me! mtrw85@gmail.com.
