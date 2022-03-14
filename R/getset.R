@@ -26,30 +26,11 @@ ReMIXTURE$set( "active" , "region_table" ,
 
 
 
-ReMIXTURE$set( "active" , "results" ,
+ReMIXTURE$set( "active" , "run_results" ,
   function(){
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
-    return(
-      list(
-        parameters = list (
-          n_iterations = private$nits,
-          subsample_proportion = private$pr_samp,
-          h_clustering_cutoff = private$hcut
-        ),
-        run = list (
-          diversity_nclusts = private$diversity,
-          var_diversity_nclusts = private$var_diversity,
-          overlapping_nclusts = private$overlap,
-          var_overlapping_nclusts = private$var_overlap
-        ),
-        plot = list (
-          plot_circles_diversity = private$plot_circles_diversity,
-          plot_circles_uniqueness = private$plot_circles_uniqueness,
-          plot_lines_overlap = private$plot_lines_overlap
-        )
-      )
-    )
+    return(copy(private$results))
   }
 )

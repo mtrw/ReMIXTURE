@@ -12,33 +12,17 @@ ReMIXTURE <- R6::R6Class(
     m = matrix(), # a distance matrix with rownames and colnames giving regions
     rt = data.table(), # region table, an info table with columns "region", "lat" , "long" , and optionally "colour"
 
-
-
-
-
-
-    ################################ PARAMETERS ######################################
-
-    #### ALGORITHM #####
-    nits = NULL, # a record of the number of iterations used for the analysis
-    hcut = NULL, # hcut used for the clustering step
-    pr_samp = NULL, # proportion of dataset subsampled each iteration
-
-    #### PLOTTING ######
-
-
-
-
     ################################ RESULTS #########################################
-    diversity = NULL, # average number of clusters per region
-    var_diversity = NULL, # variance of number of clusters per region
-    overlap = NULL, # average number of region-overlapping / region-unique (diagonal) clusters per region
-    var_overlap = NULL, # variance of number of region-overlapping / region-unique (diagonal) clusters per region
+    # diversity = NULL, # average number of clusters per region
+    # var_diversity = NULL, # variance of number of clusters per region
+    # overlap = NULL, # average number of region-overlapping / region-unique (diagonal) clusters per region
+    # var_overlap = NULL, # variance of number of region-overlapping / region-unique (diagonal) clusters per region
+    #
+    # plot_circles_diversity = NULL,
+    # plot_circles_uniqueness = NULL,
+    # plot_lines_overlap = NULL,
 
-    plot_circles_diversity = NULL,
-    plot_circles_uniqueness = NULL,
-    plot_lines_overlap = NULL,
-
+    results = NULL,
 
     runflag = FALSE, #flags a run has been done, results computed and saved
     plotflag = FALSE #flags a plot has been done, results computed and saved

@@ -29,7 +29,8 @@ my_analysis$plot_maps(alpha_norm_per_region = T)
 \itemize{
 \item \href{#method-run}{\code{ReMIXTURE$run()}}
 \item \href{#method-new}{\code{ReMIXTURE$new()}}
-\item \href{#method-plot_heatmap}{\code{ReMIXTURE$plot_heatmap()}}
+\item \href{#method-plot_heatmaps}{\code{ReMIXTURE$plot_heatmaps()}}
+\item \href{#method-plot_clustercounts}{\code{ReMIXTURE$plot_clustercounts()}}
 \item \href{#method-plot_maps}{\code{ReMIXTURE$plot_maps()}}
 \item \href{#method-clone}{\code{ReMIXTURE$clone()}}
 }
@@ -41,8 +42,10 @@ my_analysis$plot_maps(alpha_norm_per_region = T)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$run(
   iterations = 2500,
-  subsample_proportion = 0.8,
-  h_cutoff = private$hcut
+  subsample_proportions = c(0.8, 0.9),
+  h_cutoffs = seq(0.001, 0.2, l = 6),
+  colpalette_heatmap = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
+  ...
 )}\if{html}{\out{</div>}}
 }
 
@@ -67,15 +70,27 @@ colnames giving the region of origin of the corresponding individual.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-a new `ReMIXTURE` object.
+a new \code{ReMIXTURE} object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_heatmap"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_heatmap}{}}}
-\subsection{Method \code{plot_heatmap()}}{
+\if{html}{\out{<a id="method-plot_heatmaps"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_heatmaps}{}}}
+\subsection{Method \code{plot_heatmaps()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_heatmap(
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_heatmaps(
+  colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_clustercounts"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_clustercounts}{}}}
+\subsection{Method \code{plot_clustercounts()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercounts(
   colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
   ...
 )}\if{html}{\out{</div>}}
@@ -88,6 +103,7 @@ a new `ReMIXTURE` object.
 \subsection{Method \code{plot_maps()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_maps(
+  run = NULL,
   alpha_norm_per_region,
   lon_angle = 0,
   lat_angle = 0,

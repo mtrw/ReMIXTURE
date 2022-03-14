@@ -1,5 +1,9 @@
 ce <- function(...){   cat(paste0(...,"\n"), sep='', file=stderr()) %>% eval(envir = globalenv() ) %>% invisible() }
 
+wait <- function(message="Press [enter] to continue"){
+  invisible(readline(prompt=message))
+}
+
 null_plot <- function(x,y,xlab=NA,ylab=NA,revx=F,revy=F,...){
   xl<-range(x,na.rm=T)
   yl<-range(y,na.rm=T)
