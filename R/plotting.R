@@ -10,8 +10,8 @@ ReMIXTURE$set( "public" , "plot_heatmaps" ,
       ssp <- private$results$runs[[i]]$subsample_proportion
       hc <- private$results$runs[[i]]$h_cutoff
       its <- private$results$runs[[i]]$iterations
-      wait( paste0("Please press [ENTER] to produce the next heatmap (Subsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its,")") )
-      pheatmap::pheatmap(private$results$runs[[i]]$overlap,cluster_rows=F,cluster_cols=F,color=colpalette,main=paste0("Subsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its),...)
+      wait( paste0("Please press [ENTER] to produce the next heatmap (Run: ",i,"; Subsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its,")") )
+      pheatmap::pheatmap(private$results$runs[[i]]$overlap,cluster_rows=F,cluster_cols=F,color=colpalette,main=paste0("Run: ",i,"\nSubsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its),...)
     }
   }
 )
@@ -28,15 +28,62 @@ ReMIXTURE$set( "public" , "plot_clustercounts" ,
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
+    labeldat <- private$results$parameter_selection_clustercounts[,.(nclust=mean(nclust)),by=.(run,pr_samp,hcut)]
     ggplot(private$results$parameter_selection_clustercounts,aes( x=as.factor(hcut) , y=nclust , fill=as.factor(gp_idx) )) +
       geom_violin(scale = "width") +
       facet_grid(as.factor(pr_samp)~.) +
       geom_hline(aes(yintercept=0)) +
       theme_classic() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
       labs(fill="Region / group" , x="h-cutoff" , y="Number of clusters") +
-      ggtitle(paste0("Cluster counts by region (",private$results$runs[[1]]$iterations," iterations run)"))
+      ggtitle(paste0("Cluster counts by region (",private$results$runs[[1]]$iterations," iterations run)")) +
+      geom_text(data=labeldat,aes(label=paste0("Run: ",run),fill=NULL))
   }
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+ReMIXTURE$set( "public" , "plot_clustercount_diag_nondiag_means" ,
+  function(colpalette=colorRampPalette(c("#f2f5ff","#214feb","#001261"))(100),...){
+    if(private$runflag==FALSE){
+      stop("Analysis has not been run. Perform using `$run()`")
+    }
+    d <- setDT(ldply(private$results$runs,function(r){
+      data.table(
+        subsample_proportion = r$subsample_proportion,
+        h_cutoff = r$h_cutoff,
+        iterations = r$iterations,
+        median_clustercount_diag = median(diag(r$overlap)),
+        median_clustercount_nondiag = median(get_upper_tri(r$overlap)), #or lower tri
+        total_clustercount_diag = sum(diag(r$overlap)),
+        total_clustercount_nondiag = sum(get_upper_tri(r$overlap)) #or lower tri
+      )
+    }))[,run:=paste0("Run: ",1:.N)][]
+    pdat_s <- melt(d,id.vars=c("subsample_proportion","h_cutoff","iterations","run"),measure.vars=c("total_clustercount_diag","total_clustercount_nondiag"))
+    ggplot(pdat_s,aes(x=h_cutoff,y=value,colour=variable)) +
+      geom_line() +
+      geom_point() +
+      facet_grid(subsample_proportion~.) +
+      theme_classic() +
+      geom_hline(aes(yintercept=0)) +
+      labs( colour = "Cluster counts:" ) +
+      scale_color_manual(labels = c("Single-region clusters", "Multi-region clusters"), values = c("#11888a", "#c94d4d")) +
+      ylab("Count") +
+      xlab("h-cutoff") +
+      geom_text(aes(label=run))
+  }
+)
+
 
 
 

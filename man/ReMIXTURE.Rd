@@ -31,6 +31,7 @@ my_analysis$plot_maps(alpha_norm_per_region = T)
 \item \href{#method-new}{\code{ReMIXTURE$new()}}
 \item \href{#method-plot_heatmaps}{\code{ReMIXTURE$plot_heatmaps()}}
 \item \href{#method-plot_clustercounts}{\code{ReMIXTURE$plot_clustercounts()}}
+\item \href{#method-plot_clustercount_diag_nondiag_means}{\code{ReMIXTURE$plot_clustercount_diag_nondiag_means()}}
 \item \href{#method-plot_maps}{\code{ReMIXTURE$plot_maps()}}
 \item \href{#method-clone}{\code{ReMIXTURE$clone()}}
 }
@@ -91,6 +92,18 @@ a new \code{ReMIXTURE} object.
 \subsection{Method \code{plot_clustercounts()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercounts(
+  colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_clustercount_diag_nondiag_means"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_clustercount_diag_nondiag_means}{}}}
+\subsection{Method \code{plot_clustercount_diag_nondiag_means()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercount_diag_nondiag_means(
   colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
   ...
 )}\if{html}{\out{</div>}}

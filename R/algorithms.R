@@ -25,7 +25,7 @@ ReMIXTURE$set( "public" , "run" ,
     #local params
     nits <- iterations
     if(length(h_cutoffs)==1){
-      warning("Only one h_cutoff value being tried. It is highly recommended to experiment with this parameter and select a value that gives meaningful results, i.e., where the cluster size captures a good balance of region-unique and region-overlapping clusters.")
+      warning("Only one h_cutoff value being tried. It is highly recommended to experiment with this parameter and select a value that gives meaningful results, i.e., where the cluster size captures a good balance of region-unique and region-overlapping clusters. Functions to help with this include plot_clustercount_diag_nondiag_means(), plot_heatmaps(), plot_clustercounts()")
     }
     ind_info <- data.table(
       gp=colnames(private$m),
@@ -47,14 +47,15 @@ ReMIXTURE$set( "public" , "run" ,
       it=1:nits,
       hcut=h_cutoffs,
       pr_samp=subsample_proportions,
-      nclust=integer(1)
+      nclust=integer(1),
+      run=integer(1)
     ) %>% setDT()
 
 
     param_test_insert <- 1:ngp
     results_insert <- 1
-    for(hcut in h_cutoffs){
-      for(pr_samp in subsample_proportions){
+    for(pr_samp in subsample_proportions){
+      for(hcut in h_cutoffs){
         ce("Begin analysis for h_cutoff==",round(hcut,digits=4)," and subsample_proportions==",pr_samp," ...")
 
         #local result containers
@@ -79,6 +80,7 @@ ReMIXTURE$set( "public" , "run" ,
           rm(t)
 
           param_test_out[param_test_insert]$nclust <- ind_info[ss_selector,.N,by=.(gp_idx,clust)][,.N,by=gp_idx][order(gp_idx)]$N
+          param_test_out[param_test_insert]$run <- results_insert
           param_test_insert <- param_test_insert + ngp
 
           ind_info[ss_selector,{ #over clusters
@@ -122,5 +124,8 @@ ReMIXTURE$set( "public" , "run" ,
   }
 )
 
+#RAW plot data must record params.
+#Plots must record params
+#Check widths mean stuff
 
 
