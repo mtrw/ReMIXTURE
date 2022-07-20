@@ -12,16 +12,34 @@ This version is significantly updated and differs non-trivially from the version
 
 \examples{
 
+#installation
+devtools::install_github("https://github.com/mtrw/ReMIXTURE")
+
+#new analysis using example data provided
 my_analysis <- ReMIXTURE$new(
-distance_matrix = ReMIXTURE::ReMIXTURE_example_distance_matrix,
-region_table = ReMIXTURE::ReMIXTURE_example_region_positions
+  distance_matrix = ReMIXTURE::ReMIXTURE_example_distance_matrix,
+  region_table = ReMIXTURE::ReMIXTURE_example_region_positions
 )
 
-my_analysis$run(iterations = 500,subsample_proportion = 0.8,h_cutoff = 0.013)
+#A good selection of h-cutoffs should span the lower end of all distance peaks
+my_analysis$plot_distance_densities(set_xlims = c(0,0.2))
 
-my_analysis$plot_heatmap()
+#Run the analysis
+my_analysis$run(iterations = 500,subsample_proportions = c(0.7,0.8,0.9),h_cutoffs=seq(.008,.02,l=6))
 
-my_analysis$plot_maps(alpha_norm_per_region = T)
+#Raw results
+my_analysis$run_results
+
+#Tools to assess h-cutoff values
+   #Good values are often found between where the median clustercounts are equal, and where the inter-region cluster counts maximise
+my_analysis$plot_clustercount_diag_nondiag_means()
+   #A good value has a "balanced" heatmap, the main features in which are stable at nearby values
+my_analysis$plot_heatmaps()
+   #A good value does not incur many or any per-region cluster counts near one. A few may be inevitable in some datasets though.
+my_analysis$plot_clustercounts()
+
+#Plot the regions on the globe, and add raw plotting data to my_analysis$run_results
+my_analysis$plot_maps(run = 9,alpha_norm_per_region = T)
 
 }
 \section{Methods}{
@@ -31,8 +49,9 @@ my_analysis$plot_maps(alpha_norm_per_region = T)
 \item \href{#method-new}{\code{ReMIXTURE$new()}}
 \item \href{#method-plot_heatmaps}{\code{ReMIXTURE$plot_heatmaps()}}
 \item \href{#method-plot_clustercounts}{\code{ReMIXTURE$plot_clustercounts()}}
-\item \href{#method-plot_clustercount_diag_nondiag_means}{\code{ReMIXTURE$plot_clustercount_diag_nondiag_means()}}
+\item \href{#method-plot_h_optimisation}{\code{ReMIXTURE$plot_h_optimisation()}}
 \item \href{#method-plot_maps}{\code{ReMIXTURE$plot_maps()}}
+\item \href{#method-plot_distance_densities}{\code{ReMIXTURE$plot_distance_densities()}}
 \item \href{#method-clone}{\code{ReMIXTURE$clone()}}
 }
 }
@@ -99,12 +118,13 @@ a new \code{ReMIXTURE} object.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_clustercount_diag_nondiag_means"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_clustercount_diag_nondiag_means}{}}}
-\subsection{Method \code{plot_clustercount_diag_nondiag_means()}}{
+\if{html}{\out{<a id="method-plot_h_optimisation"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_h_optimisation}{}}}
+\subsection{Method \code{plot_h_optimisation()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercount_diag_nondiag_means(
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_h_optimisation(
   colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
+  plot_entropy = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -117,12 +137,22 @@ a new \code{ReMIXTURE} object.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_maps(
   run = NULL,
-  alpha_norm_per_region,
+  alpha_norm_per_region = NULL,
+  alpha_correlation = F,
   lon_angle = 0,
   lat_angle = 0,
   width_lims = c(5, 35),
   alpha_lims = c(0.05, 0.99)
 )}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_distance_densities"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_distance_densities}{}}}
+\subsection{Method \code{plot_distance_densities()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_distance_densities(set_bw = 0.001, set_xlims = c(0, 1))}\if{html}{\out{</div>}}
 }
 
 }

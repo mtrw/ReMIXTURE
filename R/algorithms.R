@@ -9,16 +9,8 @@ ReMIXTURE$set( "public" , "run" ,
 
 
     ce("\tResetting results fields and flags")
-    # private$diversity <- NULL
-    # private$var_diversity <- NULL
-    # private$overlap <- NULL
-    # private$var_overlap <- NULL
     private$results <- list()
     private$runflag <- FALSE
-
-    # private$plot_circles_diversity <- NULL
-    # private$plot_circles_uniqueness <- NULL
-    # private$plot_lines_overlap <- NULL
     private$plotflag <- FALSE
 
     ce("\tSetting up local variables and containers ...")
@@ -56,6 +48,7 @@ ReMIXTURE$set( "public" , "run" ,
     results_insert <- 1
     for(pr_samp in subsample_proportions){
       for(hcut in h_cutoffs){
+        #dev hcut=.013; pr_samp=0.8
         ce("Begin analysis for h_cutoff==",round(hcut,digits=4)," and subsample_proportions==",pr_samp," ...")
 
         #local result containers
@@ -67,14 +60,23 @@ ReMIXTURE$set( "public" , "run" ,
         counts_2_mat <- matrix(0.0,nrow=ngp,ncol=ngp)
         colnames(counts_2_mat) <- rownames(counts_2_mat) <- gp_list
 
+        cors_mat <- matrix(0L,nrow=ngp,ncol=ngp)
+        cors_mat_accumulator <- cors_mat
+        cors_mat_accumulator_empty <- cors_mat
+        cors_2_mat <- matrix(0.0,nrow=ngp,ncol=ngp)
+        colnames(cors_mat) <- rownames(cors_mat) <- gp_list
+
         ce("\tIterating ...")
-        for(it in 1:nits){ #dev it = 1
+        for(it in 1:nits){ #Begin iteration loop
           if(it %% 100 == 0) {
             ce("\t\tBegin iteration: ",it)
           }
+          #Subsample
           ss_selector <- ind_info[sample(idx,round(pr_samp*.N))]$idx
-          ind_info[ss_selector, clust:=cutree(hclust(as.dist(private$m[ss_selector,ss_selector]),),h=hcut)]
+          #Cluster
+          ind_info[ss_selector, clust:=cutree(hclust(as.dist(private$m[ss_selector,ss_selector])),h=hcut)]
           counts_mat_accumulator <- counts_mat_accumulator_empty
+          cors_mat_accumulator <- cors_mat_accumulator_empty
           nclust_counts <- nclust_counts + (t<-ind_info[ss_selector,.(add=nu(clust)),by=.(gp_idx)][order(gp_idx),]$add)
           nclust_counts_2 <- nclust_counts_2 + t**2
           rm(t)
@@ -96,6 +98,16 @@ ReMIXTURE$set( "public" , "run" ,
           counts_mat_accumulator <- fold_matrix(counts_mat_accumulator)
           counts_mat <- counts_mat + counts_mat_accumulator
           counts_2_mat <- counts_2_mat + counts_mat_accumulator**2
+
+          gp_presabs <- ind_info[ss_selector,.(gp_idx=1:ngp,presence=1:ngp %in% unique(gp_idx)),by=.(clust)]
+          setkey(gp_presabs,clust,gp_idx)
+          #now calculate cors #dev gps <- 1:2
+          apply(combn(1:ngp,2),2,function(gps) { cors_mat_accumulator[gps[1],gps[2]] <<- cor(gp_presabs[gp_idx==gps[1]]$presence,gp_presabs[gp_idx==gps[2]]$presence) } ) %>% invisible #over permutations of members of multigroup cluster
+          cors_mat_accumulator <- fold_matrix(cors_mat_accumulator)
+          cors_mat <- cors_mat + cors_mat_accumulator
+          cors_2_mat <- cors_2_mat + cors_mat_accumulator**2
+
+
         } #end iteration loop
 
         ce("\tSummarising and saving results ...")
@@ -107,7 +119,9 @@ ReMIXTURE$set( "public" , "run" ,
           overlap = counts_mat/nits,
           var_overlap = (counts_2_mat/nits) - (counts_mat/nits)**2,
           diversity = nclust_counts/nits,
-          var_diversity = (nclust_counts_2/nits) - (nclust_counts/nits)**2
+          var_diversity = (nclust_counts_2/nits) - (nclust_counts/nits)**2,
+          correlations = cors_mat/nits,
+          var_correlations = (cors_2_mat/nits) - (cors_mat/nits)**2
         )
 
         results_insert <- results_insert + 1
@@ -123,9 +137,4 @@ ReMIXTURE$set( "public" , "run" ,
     ce("------------------------------------------------")
   }
 )
-
-#RAW plot data must record params.
-#Plots must record params
-#Check widths mean stuff
-
 

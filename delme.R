@@ -1,36 +1,42 @@
-setwd("\\\\filer-5.ipk-gatersleben.de\\agruppen\\GGR\\wallace\\workspace\\eggplant_remixture")
-
-#devtools::install_github("mtrw/ReMIXTURE")
-#library(ReMIXTURE)
-#library(data.table)
-#?ReMIXTURE
 
 
 
-#Set up DM ############################################################
-dm <- readRDS("data/ibs_TARGET_SNPs_melongena.rds")$ibs
-dm <- 1-dm
-ind_regions <- fread("./data/Melongena_origin_updated.txt",col.names=c("sample_id","region"))
-tmp <- data.table(sample_id=readRDS("data/ibs_TARGET_SNPs_melongena.rds")$sample.id)
-regions <- ind_regions[tmp,on="sample_id"]
-#regions[,.N,by=.(region)]
-colnames(dm) <- rownames(dm) <- regions$region
-selectinds <- !is.na(rownames(dm)) & !rownames(dm) %in% c("Unknown","E_S_America","W_S_America","Meso_America-Caribbean","Oceania")
-dm <- dm[selectinds,selectinds]
-dm <- dm[order(rownames(dm)),order(rownames(dm))]
-dm[1:5,1:5]
-#######################################################################
-
-#Set up region table  #################################################
-rt <- fread("data/region_info.csv")
-rt
-############################################################
-
-rx <- ReMIXTURE$new(distance_matrix = dm,region_table = rt)
-
-rx$run(iterations = 1000,subsample_proportion = 0.8,h_cutoff = 0.13)
-
-rx$plot_heatmap()
 
 
-rx$plot_maps()
+
+#devtools::install_github("https://github.com/mtrw/ReMIXTURE")
+library(ReMIXTURE)
+
+#new analysis using example data provided
+my_analysis <- ReMIXTURE$new(
+  distance_matrix = ReMIXTURE::ReMIXTURE_example_distance_matrix,
+  region_table = ReMIXTURE::ReMIXTURE_example_region_positions
+)
+
+#A good selection of h-cutoffs should span the lower end of all distance peaks
+
+my_analysis$run(iterations = 80,subsample_proportions = c(0.8),h_cutoffs=seq(.008,.04,l=8))
+#my_analysis$run(iterations = 250,subsample_proportions = c(0.8),h_cutoffs=0.013)
+
+my_analysis$run_results$runs[[1]]$correlations %>% pheatmap(cluster_rows = F,cluster_cols = F)
+
+
+
+#my_analysis$plot_distance_densities(set_xlims = c(0,0.2))
+
+#Raw results
+#my_analysis$run_results
+
+#Tools to assess h-cutoff values
+   #Good values are often found between where the median clustercounts are equal, and where the inter-region cluster counts maximise
+my_analysis$plot_h_optimisation()
+my_analysis$plot_h_optimisation(plot_entropy = T)
+#A good value has a "balanced" heatmap, the main features in which are stable at nearby values
+my_analysis$plot_heatmaps()
+   #A good value does not incur many or any per-region cluster counts near one. A few may be inevitable in some datasets though.
+my_analysis$plot_clustercounts()
+
+#Plot the regions on the globe, and add raw plotting data to my_analysis$run_results
+my_analysis$plot_maps(run = 1,alpha_norm_per_region = T)
+my_analysis$plot_maps(run = 1,alpha_correlation = T ,alpha_norm_per_region = F)
+
