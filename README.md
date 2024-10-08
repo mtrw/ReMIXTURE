@@ -87,7 +87,7 @@ my_analysis$plot_maps(
   #range_lat = c(20,60),      # to play with map range
   width_lims = c(5,20),
   alpha_lims = c(.05,1)
-  #curvature_matrix = matrix(rnorm(nrow(my_analysis$region_table)**2),nrow=nrow(my_analysis$region_table),dimnames = list(my_analysis$region_table$region,my_analysis$region_table$region)) # curve the lines
+  #curvature_matrix = matrix(abs(rnorm(nrow(my_analysis$region_table)**2))/2,nrow=nrow(my_analysis$region_table),dimnames = list(my_analysis$region_table$region,my_analysis$region_table$region)) # curve the lines
 )
 ```
 
