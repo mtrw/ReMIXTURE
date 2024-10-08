@@ -5,6 +5,13 @@ wait <- function(message="Press [enter] to continue"){
   invisible(readline(prompt=message))
 }
 
+argGiven <- function(x){
+  !is.null(x)
+}
+argNotGiven <- function(x){
+  is.null(x)
+}
+
 clamp <- function(x,lower=min(x,na.rm=T),upper=max(x,na.rm=T)){
   x[x<lower] <- lower
   x[x>upper] <- upper

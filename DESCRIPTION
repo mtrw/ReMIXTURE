@@ -17,8 +17,6 @@ Imports:
     R6,
     plyr,
     ggplot2,
-    ggspatial,
-    rnaturalearth,
     pheatmap
 Collate:
     ReMIXTURE.R
