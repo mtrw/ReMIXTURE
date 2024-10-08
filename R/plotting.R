@@ -98,13 +98,8 @@ ReMIXTURE$set( "public" , "plot_h_optimisation" ,
         xlab("h-cutoff") +
         geom_text(aes(label=run)))
     }
-
   }
 )
-
-
-
-
 
 
 
@@ -115,135 +110,86 @@ ReMIXTURE$set( "public" , "plot_h_optimisation" ,
 
 
 ReMIXTURE$set( "public" , "plot_maps" ,
-function(run=NULL,alpha_norm_per_region=NULL,alpha_correlation=F,lon_angle=0,lat_angle=0,width_lims=c(5,35),alpha_lims=c(0.05,0.99)){
-  if(private$runflag==FALSE){
-    stop("Analysis has not been run. Perform using `$run()`")
+  function(run=NULL,focalRegion=NULL,range_lon=c(-179,179),range_lat=c(-85,85),width_lims=c(5,13),alpha_lims=c(0.05,0.99),projection=eckertIV,curvature_matrix=NULL){
+    if(private$runflag==FALSE){
+      stop("Analysis has not been run. Perform using `$run()`")
+    }
+    if(is.null(run) & length(private$results$runs)>1){
+      stop("Please provide a run number to plot from (consider using plot_heatmaps() and plot_clustercounts() to assess which run parameters are appropriate).")
+    }
+    if(is.null(run) & length(private$results$runs)==1){
+     warning("Only one run was performed, and will be plotted. If you haven't already, please be sure to try multiple runs with a good range of parameter values, and assess their appropriateness with plot_heatmaps() and plot_clustercounts()")
+     run <- 1
+    }
+
+    st <- private$results$runs[[run]]$overlap
+    rt <- data.table(
+      region=colnames(st),
+      totDiv=private$results$runs[[run]]$diversity
+    )
+    rt[,uniqueDiv:=private$results$runs[[run]]$overlap[r,r],by=.(r=region)]
+    rt <- private$rt[rt,on=.(region)]
+    divRange <- range(rt$totDiv,rt$uniqueDiv,st)
+
+    rt[,wTotDiv:=(c(totDiv,divRange) %>% scale_between(width_lims[1],width_lims[2]))[1:.N]]
+    rt[,wUniqueDiv:=(c(uniqueDiv,divRange) %>% scale_between(width_lims[1],width_lims[2]))[1:.N]]
+    wst <- st
+    wst[,] <- c(st,range(st)) %>% scale_between(width_lims[1],width_lims[2]) %>% head(-2)
+
+    ct <- if(is.null(curvature_matrix)){
+      matrix(0.0,ncol=nrow(rt),nrow=nrow(rt),dimnames=list(rt$region,rt$region))
+    } else {
+      curvature_matrix
+    }
+
+    at <- st
+    diag(at) <- mean(at) # just any value not at the extreme, so it doesn't affect the scaling of the shared div values
+    at[,] <- at %>% scale_between(alpha_lims[1],alpha_lims[2])
+
+    plotMiddle <- findCentreLL(range_lon,range_lat)
+    trt <- copy(rt) %>% rotateLatLonDtLL(-plotMiddle[1],-plotMiddle[2],splitPlotGrps=F)
+
+    rIdxList <- if(!is.null(focalRegion)){
+      which(rt$region %in% focalRegion)
+    } else {
+      1:nrow(trt)
+    }
+
+    for(i in rIdxList){
+      #i <- 1
+      pe <- plotEmptyMap( range_lon, range_lat, projFun=projection )
+      #plotMapItem( makeBorder() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
+      plotMapItem( makeMapDataLatLonLines() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
+      plotMapItem( mapData110               , range_lon , range_lat, projFun=projection , plotFun=polygon, col="#f7bf25" , lwd=0.2 )
+      plotMapBorder(                          range_lon , range_lat, projFun=projection , plotEdges=pe ,lwd=4 )
+
+      for(j in 1:nrow(trt)){
+        #j <- 3
+        if(i==j){next}
+        ldt <- curved_rounded_line(
+          x1=trt$lon[i],y1 = trt$lat[i],
+          x2=trt$lon[j],y2 = trt$lat[j],
+          width =     wst[trt$region[i],trt$region[j]],
+          curvature = ct[trt$region[i],trt$region[j]]
+        ) %>% mat2dtLL()
+        plotMapItem(ldt,projFun=projection,plotFun=polygon,col=alpha("black",at[trt$region[i],trt$region[j]]),border="black",lwd=wst[trt$region[i],trt$region[j]])
+
+        cdt <- circle_seg(trt[j]$lon,trt[j]$lat,radius=trt$wTotDiv[j]/2   ) %>% mat2dtLL()
+        udt <- circle_seg(trt[j]$lon,trt[j]$lat,radius=trt$wUniqueDiv[j]/2) %>% mat2dtLL()
+        plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#00000055") # 'shadow' effect
+        plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#000000FF")
+        plotMapItem(udt,projFun=projection,plotFun=polygon,col="#FFFFFF")
+      }
+      cdt <- circle_seg(trt[i]$lon,trt[i]$lat,radius=trt$wTotDiv[i]/2   ) %>% mat2dtLL()
+      udt <- circle_seg(trt[i]$lon,trt[i]$lat,radius=trt$wUniqueDiv[i]/2) %>% mat2dtLL()
+      plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#00000055") # 'shadow' effect
+      plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#000000FF")
+      plotMapItem(udt,projFun=projection,plotFun=polygon,col="#FFFFFF")
+    }
+
+
   }
-  if(is.null(run) & length(private$results$runs)>1){
-    stop("Please provide a run number to plot from (consider using plot_heatmaps() and plot_clustercounts() to assess which run parameters are appropriate).")
-  }
-  if(is.null(run) & length(private$results$runs)==1){
-    warning("Only one run was performed, and will be plotted. If you haven't already, please be sure to try multiple runs with a good range of parameter values, and assess their appropriateness with plot_heatmaps() and plot_clustercounts()")
-    run <- 1
-  }
-  if(alpha_correlation==TRUE & is.null(alpha_norm_per_region)){
-    alpha_norm_per_region=FALSE
-  }
-  if(alpha_correlation==TRUE & alpha_norm_per_region==TRUE){
-    stop("alpha_correlation and alpha_norm_per_region cannot both be TRUE")
-  }
-
-
-  ind_info <- data.table(
-    gp=colnames(private$m),
-    idx=1:ncol(private$m)
-  )
-  gp_vec <- colnames(private$m)
-  gp_list <- sort(ind_info[,unique(gp)])
-  gp_info <- data.table(
-    gp = sort(gp_list),
-    gp_idx = 1:length(gp_list)
-  )
-  ind_info <- gp_info[ind_info,on="gp"]
-  nind <- ncol(private$m)
-  ngp <- nrow(gp_info)
-
-  regionlist <- private$rt
-
-  ol_dt <- as.data.table(private$results$runs[[run]]$overlap)[,region := gp_list] %>% melt(id.vars="region") %>% setnames(c("region","variable","value"),c("p1","p2","count"))
-  ol_dt <- regionlist[,.(p1=region,x1=x,y1=y)][ol_dt,on=.(p1)]
-  ol_dt <- regionlist[,.(p2=region,x2=x,y2=y)][ol_dt,on=.(p2)]
-  ol_dt <- ol_dt[p1!=p2,]
-  ol_dt[,idx:=1:.N]
-  ol_dt[,count_norm := count/sum(count),by=.(p1)]
-
-  cor_dt <- as.data.table(private$results$runs[[run]]$correlation)[,region := gp_list] %>% melt(id.vars="region") %>% setnames(c("region","variable","value"),c("p1","p2","correlation"))
-  ol_dt <- cor_dt[ol_dt,on=.(p1,p2)]
-
-
-  coords <- regionlist[,.(region,x,y)][gp_info[,.(region=gp)],on=.(region)]
-  coords[,diversity:=private$results$runs[[run]]$diversity]
-  coords[,self:=diag(private$results$runs[[run]]$overlap)]
-
-  scale_between_f(c(private$results$runs[[run]]$overlap,private$results$runs[[run]]$diversity),width_lims[1],width_lims[2]) -> scaler_width
-  scale_between_f(ol_dt[p1!=p2]$count,alpha_lims[1],alpha_lims[2]) -> scaler_alpha
-  scale_between_f(ol_dt[p1!=p2]$count_norm,alpha_lims[1],alpha_lims[2]) -> scaler_alpha_norm
-
-  cdat_div <- plyr::ldply(1:ngp, function(i) { #dev i=2
-    c <- circle_seg_dt(coords$x[i], coords$y[i], coords[i,scaler_width(diversity)/2])
-    c[, `:=`(region, coords$region[i])]
-    c
-  })
-  data.table::setDT(cdat_div)
-  cdat_self <- plyr::ldply(1:ngp, function(i) {
-    c <- circle_seg_dt(coords$x[i], coords$y[i], coords[i,(scaler_width(diversity)/2)*(self/diversity)])
-    c[, `:=`(region, coords$region[i])]
-    c
-  })
-  data.table::setDT(cdat_self)
-
-  cdat_div <- coords[, .(region)][cdat_div, on = "region"]
-  cdat_self <- coords[, .(region)][cdat_self, on = "region"]
-
-
-  #avert your eyes
-  ldat_in  <- ol_dt[p1 != p2][, data.table(
-    region = rep(p1, 2),
-    region_tgt = rep(p2, 2),
-    x = c(x1, x2),
-    y = c(y1, y2),
-    count = as.numeric(rep(count, 2)),
-    count_norm = as.numeric(rep(count_norm, 2)),
-    correlation=rep(correlation,2)
-  ), by = "idx"]
-  ldat <- ldply(unique(ldat_in$idx),function(i){ # dev i = 1
-    ldat_in[ idx==i , {
-      x1_ <<- x[1]
-      x2_ <<- x[2]
-      y1_ <<- y[1]
-      y2_ <<- y[2]
-      w_  <<- scaler_width(count[1])
-      c_  <<- if(alpha_norm_per_region){alpha("#000000",scaler_alpha_norm(count_norm[1]))} else if(alpha_correlation){alpha("#000000",scaler_alpha_norm(correlation[1]))} else {alpha("#000000",scaler_alpha(count[1]))}
-      a_  <<- scaler_alpha(count[1])
-      r_  <<- region[1]
-    }] %>% invisible
-    rounded_line(x1_,y1_,x2_,y2_,w_)[,col:=c_][,region:=r_][,idx:=i][,alpha:=a_]#add gp later
-  }) %>% setDT
-  #\avert
-
-
-  private$results$plot_data$lines <- ldat
-  private$results$plot_data$circles_regiondiversity <- cdat_div
-  private$results$plot_data$circles_regionunique <- cdat_self
-
-  ce("Plotting. Raw plot data is now accessible via `$run_results`")
-
-
-  world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
-  p <- ggplot(data = world) + geom_sf(lwd = 0.05) + theme_bw() +
-    theme(panel.border = element_blank()) +
-    coord_sf(crs = paste0("+proj=laea +lat_0=", lat_angle, " +lon_0=", lon_angle, " +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs ")) +
-    xlab(NULL) + ylab(NULL)
-  pp <- p + geom_spatial_polygon(data = ldat, aes(x = x, y = y , fill=col , group=region)) +
-    scale_fill_identity() +
-    facet_wrap("region",ncol=4)
-  ppp <- pp +
-    geom_spatial_polygon(data = cdat_div, aes(x = x, y = y, group = region, fill = "#000000")) +
-    geom_spatial_polygon(data = cdat_self, aes(x = x, y = y, group = region) , fill = "#FFFFFF") +
-    theme(legend.position = "none")#
-  ppp
-
- }
 )
-
-
-
-
-
-
-
-
-
 
 
 

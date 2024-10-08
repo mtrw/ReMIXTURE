@@ -4,15 +4,15 @@ ReMIXTURE$set( "private" , "validate_rt" ,
      if( !data.table::is.data.table(in_rt) ){
        stop("Region position table must be a data.table")
      }
-     if( any(!c("region","x","y") %in% colnames(in_rt) ) ){
-       stop("Region position table must include columns named \"x\", \"y\", and \"region\".")
+     if( any(!c("region","lon","lat") %in% colnames(in_rt) ) ){
+       stop("Region position table must include columns named \"lon\", \"lat\", and \"region\".")
      }
      #check types of cols
-     if(!(class(in_rt$x) == "numeric" | class(in_rt$x) == "integer") ){
-       stop("Column `x` must contain numeric or integer values.")
+     if(!(class(in_rt$lon) == "numeric" | class(in_rt$lon) == "integer") ){
+       stop("Column `lon` must contain numeric or integer values.")
      }
-     if(!(class(in_rt$y) == "numeric" | class(in_rt$y) == "integer") ){
-       stop("Column `y` must contain numeric or integer values.")
+     if(!(class(in_rt$lat) == "numeric" | class(in_rt$lat) == "integer") ){
+       stop("Column `lat` must contain numeric or integer values.")
      }
      if(!(class(in_rt$region) == "character") ){
        stop("Column `region` must be a character vector.")
@@ -20,11 +20,11 @@ ReMIXTURE$set( "private" , "validate_rt" ,
      if( !all(unique(colnames(private$dm)) %in% in_rt$region) ){
        stop("All regions present in distance matrix must have entries in the region position table.")
      }
-     if( !all(in_rt$x %between% c(-180,180)) ){
-       stop("All x (longitude) values must fall between +/- 180.")
+     if( !all(in_rt$lon %between% c(-180,180)) ){
+       stop("All lon (longitude) values must fall between +/- 180.")
      }
-     if( !all(in_rt$y %between% c(-85,85)) ){
-       stop("All y (latitude) values must fall between +/- 85.")
+     if( !all(in_rt$lat %between% c(-85,85)) ){
+       stop("All lat (latitude) values must fall between +/- 85.")
      }
    }
 )

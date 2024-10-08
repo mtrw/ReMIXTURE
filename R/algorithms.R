@@ -47,6 +47,7 @@ ReMIXTURE$set( "public" , "run" ,
     param_test_insert <- 1:ngp
     results_insert <- 1
     for(pr_samp in subsample_proportions){
+      nSelectPerGrp <- round(ind_info[,.N,by=.(gp)][,min(N)] * pr_samp)
       for(hcut in h_cutoffs){
         #dev hcut=.013; pr_samp=0.8
         ce("Begin analysis for h_cutoff==",round(hcut,digits=4)," and subsample_proportions==",pr_samp," ...")
@@ -60,37 +61,28 @@ ReMIXTURE$set( "public" , "run" ,
         counts_2_mat <- matrix(0.0,nrow=ngp,ncol=ngp)
         colnames(counts_2_mat) <- rownames(counts_2_mat) <- gp_list
 
-        cors_mat <- matrix(0L,nrow=ngp,ncol=ngp)
-        cors_mat_accumulator <- cors_mat
-        cors_mat_accumulator_empty <- cors_mat
-        cors_2_mat <- matrix(0.0,nrow=ngp,ncol=ngp)
-        colnames(cors_mat) <- rownames(cors_mat) <- gp_list
-
         ce("\tIterating ...")
         for(it in 1:nits){ #Begin iteration loop
           if(it %% 100 == 0) {
             ce("\t\tBegin iteration: ",it)
           }
           #Subsample
-          ss_selector <- ind_info[sample(idx,round(pr_samp*.N))]$idx
+          ss_selector <- ind_info[,.(s=sample(idx,nSelectPerGrp)),by=.(gp_idx)]$s
           #Cluster
           ind_info[ss_selector, clust:=cutree(hclust(as.dist(private$m[ss_selector,ss_selector])),h=hcut)]
           counts_mat_accumulator <- counts_mat_accumulator_empty
-          cors_mat_accumulator <- cors_mat_accumulator_empty
-          nclust_counts <- nclust_counts + (t<-ind_info[ss_selector,.(add=nu(clust)),by=.(gp_idx)][order(gp_idx),]$add)
+          nclust_counts <- nclust_counts + (t<-ind_info[ss_selector,.(add=nu(clust)),by=.(gp_idx)][order(gp_idx),]$add) # in how many unique clusters does each region occur
           nclust_counts_2 <- nclust_counts_2 + t**2
-          rm(t)
 
-          param_test_out[param_test_insert]$nclust <- ind_info[ss_selector,.N,by=.(gp_idx,clust)][,.N,by=gp_idx][order(gp_idx)]$N
+          param_test_out[param_test_insert]$nclust <- t # keep a record of each run
           param_test_out[param_test_insert]$run <- results_insert
           param_test_insert <- param_test_insert + ngp
 
           ind_info[ss_selector,{ #over clusters
             ugidx <- unique(gp_idx)
             if(length(ugidx) == 1){
-              counts_mat_accumulator[gp_idx,gp_idx] <<- counts_mat_accumulator[gp_idx,gp_idx] + 1 #solo cluster
+              counts_mat_accumulator[gp_idx,gp_idx] <<- counts_mat_accumulator[gp_idx,gp_idx] + 1 #solo cluster--contributes to genetic 'uniqueness'
             } else {
-
               apply(combn(ugidx,2),2,function(c) { counts_mat_accumulator[c[1],c[2]] <<- counts_mat_accumulator[c[1],c[2]] + 1 } ) #over permutations of members of multigroup cluster
             }
           },by=.(clust)] %>% invisible
@@ -99,13 +91,9 @@ ReMIXTURE$set( "public" , "run" ,
           counts_mat <- counts_mat + counts_mat_accumulator
           counts_2_mat <- counts_2_mat + counts_mat_accumulator**2
 
-          gp_presabs <- ind_info[ss_selector,.(gp_idx=1:ngp,presence=1:ngp %in% unique(gp_idx)),by=.(clust)]
-          setkey(gp_presabs,clust,gp_idx)
-          #now calculate cors #dev gps <- 1:2
-          apply(combn(1:ngp,2),2,function(gps) { cors_mat_accumulator[gps[1],gps[2]] <<- cor(gp_presabs[gp_idx==gps[1]]$presence,gp_presabs[gp_idx==gps[2]]$presence) } ) %>% invisible #over permutations of members of multigroup cluster
-          cors_mat_accumulator <- fold_matrix(cors_mat_accumulator)
-          cors_mat <- cors_mat + cors_mat_accumulator
-          cors_2_mat <- cors_2_mat + cors_mat_accumulator**2
+          # gp_presabs <- ind_info[ss_selector,.(gp_idx=1:ngp,presence=1:ngp %in% unique(gp_idx)),by=.(clust)]
+          # setkey(gp_presabs,clust,gp_idx)
+          rowSums(counts_mat_accumulator) - nclust_counts
 
 
         } #end iteration loop
@@ -119,9 +107,7 @@ ReMIXTURE$set( "public" , "run" ,
           overlap = counts_mat/nits,
           var_overlap = (counts_2_mat/nits) - (counts_mat/nits)**2,
           diversity = nclust_counts/nits,
-          var_diversity = (nclust_counts_2/nits) - (nclust_counts/nits)**2,
-          correlations = cors_mat/nits,
-          var_correlations = (cors_2_mat/nits) - (cors_mat/nits)**2
+          var_diversity = (nclust_counts_2/nits) - (nclust_counts/nits)**2
         )
 
         results_insert <- results_insert + 1

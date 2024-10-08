@@ -9,14 +9,15 @@ ReMIXTURE$set( "active" , "distance_matrix" ,
 
 
 
-
-#' @description
-#' getset region table
-#' @return table
+#' @field region_table Get the region table from a ReMIXTURE object
+#' @name ReMIXTURE
+#' @rdname ReMIXTURE
+#' @usage ReMIXTURE_object$region_table
+#' @format An active binding in an R6 class.
 ReMIXTURE$set( "active" , "region_table" ,
   function(){
     rt <- copy(private$rt)
-    return(out_dm)
+    return(rt)
   }
 )
 

@@ -36,6 +36,6 @@
 #' #Plot the regions on the globe, and add raw plotting data to my_analysis$run_results
 #' my_analysis$plot_maps(run = 9,alpha_norm_per_region = T)
 #'
-#' @docType package
+#' @docType _PACKAGE
 #' @name ReMIXTURE
 NULL
