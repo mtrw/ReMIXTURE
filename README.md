@@ -10,8 +10,8 @@ ReMIXTURE is an intuitive way to show how genetic diversity in a population is d
 
 ReMIXTURE is an R package, and to run it requires:
 
-1) A symmetrical matrix of pairwise sample-to-sample distances (any distance metric will do in principle), whose rownames and colnames give the region to which the sample is assigned.
-2) A data.table or data.frame with column names 'region', 'lon', and 'lat', providing the position on the globe given to each region.
+1) A symmetrical numeric matrix of pairwise sample-to-sample distances (any distance metric will do in principle), whose rownames and colnames give the region to which the sample is assigned.
+2) A data.table or data.frame with column names `region`, `lon`, and `lat`, providing the position (numeric) on the globe given to each region (character).
 
 # Demo pipeline and basic method description
 
@@ -81,13 +81,14 @@ my_analysis$plot_clustercounts()
 my_analysis$region_table
 
 my_analysis$plot_maps(
-  focalRegion = "Asia South and South East",
+  focalRegion = "Asia South and South East", # omit to print all. Useful in conjuction with `par(mfrow=c(<nRows>,<nCols>))`
   run = 3,
-  #range_lon = c(-23.0,60.0), # to play with map range
-  #range_lat = c(20,60),      # to play with map range
-  width_lims = c(5,20),
-  alpha_lims = c(.05,1)
-  #curvature_matrix = matrix(abs(rnorm(nrow(my_analysis$region_table)**2))/2,nrow=nrow(my_analysis$region_table),dimnames = list(my_analysis$region_table$region,my_analysis$region_table$region)) # curve the lines
+  #range_lon = c(-23.0,60.0), # to play with map range, omit for the full globe
+  #range_lat = c(20,60),      # to play with map range, omit for the full globe
+  width_lims = c(5,20), # size of the circles (smallest and largest) in lat/lon units
+  alpha_lims = c(.05,1) # range of alpha values of the region-connecting lines. The alpha just scales along with line thickness (i.e. overlapped diversity) to help visual discrimination when the differences are small.
+  #projection = c(equirectangular, winkelIII, eckertIV) # choose a map projection. Or write your own--a function recieving and returning a data.table with numeric columns `lon` and `lat`.
+  #curvature_matrix = matrix(abs(rnorm(nrow(my_analysis$region_table)**2))/2,nrow=nrow(my_analysis$region_table),dimnames = list(my_analysis$region_table$region,my_analysis$region_table$region)) # curve the lines to prevent them overlapping. This curves them randomly but you can give it whatever matrix you wish. Currently in radians (will be degrees in future), with -vs and +ve values curving left/right.
 )
 ```
 
