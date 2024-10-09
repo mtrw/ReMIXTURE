@@ -586,7 +586,7 @@ equirectangular      <- function(dtLL,projColNames=c("x_ER","y_ER")){
 }
 
 
-emptyPlot <- function(rangeX,rangeY){
+emptyPlot <- function(rangeX,rangeY,...){
   plot(
     x=NULL,
     y=NULL,
@@ -594,14 +594,15 @@ emptyPlot <- function(rangeX,rangeY){
     ylab=NA,
     xlim=rangeX,
     ylim=rangeY,
-    axes=0
+    axes=0,
+    ...
   )
 }
 
-plotEmptyMap <- function( range_lon=c(-180,180), range_lat=c(-90,90), projFun=equirectangular ){
+plotEmptyMap <- function( range_lon=c(-180,180), range_lat=c(-90,90), projFun=equirectangular, ... ){
   p <- makeBorder(range_lon,range_lat) %>%
     projFun(projColNames=c("x","y"))
-  emptyPlot(range(p$x),range(p$y))
+  emptyPlot(range(p$x),range(p$y),...)
   return(data.table(x=range(p$x),y=range(p$y)) %>% invisible)
 }
 

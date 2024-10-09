@@ -172,8 +172,7 @@ ReMIXTURE$set( "public" , "plot_maps" ,
           width =     wst[trt$region[i],trt$region[j]],
           curvature = ct[trt$region[i],trt$region[j]]
         ) %>% mat2dtLL()
-        plotMapItem(ldt,projFun=projection,plotFun=polygon,col=alpha("black",at[trt$region[i],trt$region[j]]),border="black",lwd=1)
-
+        plotMapItem(ldt,projFun=projection,plotFun=polygon,col=alpha("black",at[trt$region[i],trt$region[j]]),border="#00000000")#,lwd=0.15)
         cdt <- circle_seg(trt[j]$lon,trt[j]$lat,radius=trt$wTotDiv[j]/2   ) %>% mat2dtLL()
         udt <- circle_seg(trt[j]$lon,trt[j]$lat,radius=trt$wUniqueDiv[j]/2) %>% mat2dtLL()
         plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#00000055") # 'shadow' effect
@@ -185,9 +184,8 @@ ReMIXTURE$set( "public" , "plot_maps" ,
       plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#00000055") # 'shadow' effect
       plotMapItem(cdt,projFun=projection,plotFun=polygon,col="#000000FF")
       plotMapItem(udt,projFun=projection,plotFun=polygon,col="#FFFFFF")
+      title(main=trt$region[i])
     }
-
-
   }
 )
 
