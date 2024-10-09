@@ -62,11 +62,17 @@ my_analysis$run(iterations = 80,subsample_proportions = c(0.8),h_cutoffs=seq(.00
 
 The most important parameter is the h-cutoff. Too low and almost all clusters are singletons, and no overlap between regions is recorded. Too high and all the samples fall into a few or one massive multi-region cluster.
 
-An objective and natural value to choose is the one that yields the same number of single-region and multi-region clusters. By plotting these counts over runs, we can easily see where this point is (the lines cross). The point of maximum multi-region clusters is another defensible 'objective' choice when the analysis aims to emphasise regional overlap.
+One objective and natural h-cutoff value to choose is the one that yields the same number of single-region and multi-region clusters. By plotting these counts over runs, we can easily see where this point is (the lines cross).
 
 ```
 my_analysis$plot_h_optimisation() # Run 3 seems good
+```
 
+The point of maximum multi-region clusters is another defensible 'objective' choice when the analysis aims to emphasise regional overlap. When in doubt, **a point approximately midway between these two** is a good bet and I aim for this to become the 'standard' paractice.
+
+A few other diagnostic plot options exist:
+
+```
 #A heatmap of cluster counts is helpful to see more detail on what is driving the counts
 my_analysis$plot_heatmaps()
 
