@@ -2,7 +2,8 @@
 
 
 ReMIXTURE$set( "public" , "plot_heatmaps" ,
-  function(colpalette=colorRampPalette(c("#f2f5ff","#214feb","#001261"))(100),...){
+  function(colPalette=c("#f2f5ff","#000570"),...){
+    colPalette <- colorRampPalette(c("#f2f5ff","#000570"))(100)
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
@@ -11,7 +12,19 @@ ReMIXTURE$set( "public" , "plot_heatmaps" ,
       hc <- private$results$runs[[i]]$h_cutoff
       its <- private$results$runs[[i]]$iterations
       wait( paste0("Please press [ENTER] to produce the next heatmap (Run: ",i,"; Subsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its,")") )
-      pheatmap::pheatmap(private$results$runs[[i]]$overlap,cluster_rows=F,cluster_cols=F,color=colpalette,main=paste0("Run: ",i,"\nSubsample proportion: ",ssp,"; H cutoff: ",hc,"; Iterations: ",its),...)
+
+      #browser()
+
+      heatmap(
+        private$results$runs[[i]]$overlap,
+        Rowv=NA,
+        Colv=NA,
+        col=colPalette,
+        cexRow=.8,cexCol=.8,
+        main="",
+        ...
+      )
+      mtext(text=paste0("Run ",i,": Subsample proportion: ",ssp,"; H cutoff: ",round(hc,digits = 2),"; Iterations: ",its),side=2,line=0,adj=0)
     }
   }
 )
@@ -24,10 +37,11 @@ ReMIXTURE$set( "public" , "plot_heatmaps" ,
 
 
 ReMIXTURE$set( "public" , "plot_clustercounts" ,
-  function(colpalette=colorRampPalette(c("#f2f5ff","#214feb","#001261"))(100),...){
+  function(...){
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
+    #browser()
     labeldat <- private$results$parameter_selection_clustercounts[,.(nclust=mean(nclust)),by=.(run,pr_samp,hcut)]
     ggplot(private$results$parameter_selection_clustercounts,aes( x=as.factor(hcut) , y=nclust , fill=as.factor(gp_idx) )) +
       geom_violin(scale = "width") +
@@ -54,7 +68,7 @@ ReMIXTURE$set( "public" , "plot_clustercounts" ,
 
 
 ReMIXTURE$set( "public" , "plot_h_optimisation" ,
-  function(colpalette=colorRampPalette(c("#f2f5ff","#214feb","#001261"))(100),plot_entropy=FALSE,...){
+  function(...){
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
@@ -76,28 +90,21 @@ ReMIXTURE$set( "public" , "plot_h_optimisation" ,
     pdat_s <- melt(d,id.vars=c("subsample_proportion","h_cutoff","iterations","run"),measure.vars=c("total_clustercount_diag","total_clustercount_nondiag"))
     pdat_e <- melt(d,id.vars=c("subsample_proportion","h_cutoff","iterations","run"),measure.vars=c("entropy"))
 
-    if(!plot_entropy){
-      print(ggplot(pdat_s,aes(x=h_cutoff,y=value,colour=variable)) +
-        geom_line() +
-        geom_point() +
-        facet_grid(subsample_proportion~.) +
-        theme_classic() +
-        geom_hline(aes(yintercept=0)) +
-        labs( colour = "Cluster counts:" ) +
-        scale_color_manual(labels = c("Single-region clusters", "Multi-region clusters"), values = c("#11888a", "#c94d4d")) +
-        ylab("Count") +
-        xlab("h-cutoff") +
-        geom_text(aes(label=run)))
-    } else {
-      print(ggplot(pdat_e,aes(x=h_cutoff,y=value)) +
-        geom_line() +
-        geom_point() +
-        facet_grid(subsample_proportion~.) +
-        theme_classic() +
-        ylab("Overlap cluster count matrix entropy") +
-        xlab("h-cutoff") +
-        geom_text(aes(label=run)))
-    }
+    #browser()
+
+    print(ggplot(pdat_s,aes(x=h_cutoff,y=value,colour=variable)) +
+      geom_line() +
+      geom_point() +
+      facet_grid(subsample_proportion~.) +
+      theme_classic() +
+      geom_hline(aes(yintercept=0)) +
+      labs( colour = "Cluster counts:" ) +
+      scale_color_manual(labels = c("Single-region clusters", "Multi-region clusters"), values = c("#11888a", "#c94d4d")) +
+      ylab("Count") +
+      xlab("h-cutoff") +
+      geom_text(aes(label=run)))
+
+
   }
 )
 
@@ -227,7 +234,7 @@ ReMIXTURE$set( "public" , "plot_maps" ,
 
 
 ReMIXTURE$set( "public" , "plot_distance_densities" ,
-  function(set_bw=0.001,set_xlims=c(0,1)){
+  function(set_bw=0.001,set_xlims=c(0,1), samePlot=FALSE){
     dt1 <- ldply(unique(colnames(private$m)),function(r){ #dev r = "Africa"
       selr <- rownames(private$m)==r
       ldply(unique(colnames(private$m)),function(c){ #dev r = "Africa"
@@ -241,30 +248,55 @@ ReMIXTURE$set( "public" , "plot_distance_densities" ,
       })
     }) %>% setDT
 
-    wait("Press [ENTER] for next plot ...")
-    print(ggplot(dt1,aes(x=x,y=y)) +
-      geom_line() +
-      xlim(set_xlims) +
-      theme_classic() +
-      facet_grid(region1~region2) +
-      labs(x=NULL,y=NULL))
+    colTable <- data.table(
+      region2 = unique(colnames(private$m)),
+      col     = rgb( t(col2rgb(hsv(seq(0, 1, length.out = nu(colnames(private$m))), 1, 1)) / 255) )
+    )
+    dt1 <- colTable[dt1,on=.(region2)]
+    dt1[,col:=rgb(t(col2rgb(col))/255,alpha=fifelse(region1==region2,1,0.4))]
+    dt1[,lwd:=fifelse(region1==region2,3,1)]
 
+    #browser()
 
+    if(samePlot==TRUE){
+      ce("Altering mfrow parameters for multi-plot graphics. Reset with e.g. `par(mfrow=c(1,1))`.")
+      par( mfrow=c(floor(sqrt(nrow(private$rt))),ceiling(sqrt(nrow(private$rt)))) )
+    }
 
-    dt2 <- ldply(unique(colnames(private$m)),function(r){
-      selr <- rownames(private$m)==r
-      data.table(
-        x=(0:1000)/1000,
-        y=density(private$m[selr,],bw=set_bw,from=0,to=1,n=1001)$y,
-        region=r
-      )
-    }) %>% setDT
-    wait("Press [ENTER] for next plot ...")
-    print(ggplot(dt2,aes(x=x,y=y,colour=region)) +
-      geom_line() +
-      xlim(set_xlims) +
-      theme_classic() +
-      labs(colour="Region" , x=NULL, y=NULL))
+    #rangeX <- range(dt1$x)
+    rangeY <- range(dt1$y)
+    # r1 <- unique(colnames(private$m))[1]
+    # r2 <- unique(colnames(private$m))[2]
+    for(r1 in unique(colnames(private$m))){
+      sel1 <- rownames(private$m)==r1
+      null_plot(set_xlims,rangeY,main=paste0(r1))
+      for(r2 in unique(colnames(private$m))){
+        sel2 <- rownames(private$m)==r2
+        dt1[ region1==r1 & region2==r2 , lines(x,y,col=col,lwd=lwd) ]
+      }
+    }
+#
+#     print(ggplot(dt1,aes(x=x,y=y)) +
+#       geom_line() +
+#       xlim(set_xlims) +
+#       theme_classic() +
+#       facet_grid(region1~region2) +
+#       labs(x=NULL,y=NULL))
+#
+#     dt2 <- ldply(unique(colnames(private$m)),function(r){
+#       selr <- rownames(private$m)==r
+#       data.table(
+#         x=(0:1000)/1000,
+#         y=density(private$m[selr,],bw=set_bw,from=0,to=1,n=1001)$y,
+#         region=r
+#       )
+#     }) %>% setDT
+#     wait("Press [ENTER] for next plot ...")
+#     print(ggplot(dt2,aes(x=x,y=y,colour=region)) +
+#       geom_line() +
+#       xlim(set_xlims) +
+#       theme_classic() +
+#       labs(colour="Region" , x=NULL, y=NULL))
   }
 )
 

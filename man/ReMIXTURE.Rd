@@ -89,10 +89,7 @@ a new \code{ReMIXTURE} object.
 \if{latex}{\out{\hypertarget{method-NA-plot_heatmaps}{}}}
 \subsection{Method \code{plot_heatmaps()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_heatmaps(
-  colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
-  ...
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_heatmaps(colPalette = c("#f2f5ff", "#000570"), ...)}\if{html}{\out{</div>}}
 }
 
 }
@@ -101,10 +98,7 @@ a new \code{ReMIXTURE} object.
 \if{latex}{\out{\hypertarget{method-NA-plot_clustercounts}{}}}
 \subsection{Method \code{plot_clustercounts()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercounts(
-  colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
-  ...
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercounts(...)}\if{html}{\out{</div>}}
 }
 
 }
@@ -113,11 +107,7 @@ a new \code{ReMIXTURE} object.
 \if{latex}{\out{\hypertarget{method-NA-plot_h_optimisation}{}}}
 \subsection{Method \code{plot_h_optimisation()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_h_optimisation(
-  colpalette = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
-  plot_entropy = FALSE,
-  ...
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_h_optimisation(...)}\if{html}{\out{</div>}}
 }
 
 }
@@ -144,7 +134,11 @@ a new \code{ReMIXTURE} object.
 \if{latex}{\out{\hypertarget{method-NA-plot_distance_densities}{}}}
 \subsection{Method \code{plot_distance_densities()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_distance_densities(set_bw = 0.001, set_xlims = c(0, 1))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_distance_densities(
+  set_bw = 0.001,
+  set_xlims = c(0, 1),
+  samePlot = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 }

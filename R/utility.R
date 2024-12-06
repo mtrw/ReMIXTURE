@@ -662,7 +662,6 @@ plotMapItem <- function(dtLL,range_lon=NULL,range_lat=NULL,projFun=equirectangul
 }
 
 plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("both","border","mask"),plotEdges=NULL,extraEdge=40L,maskCol="#FFFFFF",...){
-
   dt1 <- dt2 <- NULL
   if(type[1]=="mask" | type[1]=="both"){
     dt2 <- makeBorder(range_lon,range_lat,clippingMask = T) %>% projFun(projColNames=c("x","y"))
@@ -688,6 +687,14 @@ plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("bo
 
   list(dt1,dt2) %>% invisible
 }
+
+
+
+
+
+
+
+
 
 
 
