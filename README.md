@@ -1,3 +1,5 @@
+![](images/rm_logo.png)
+
 # ReMIXTURE
 
 ReMIXTURE is an intuitive way to show how genetic diversity in a population is distributed and overlapped between regions of the globe.
