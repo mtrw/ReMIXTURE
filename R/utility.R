@@ -554,6 +554,7 @@ makeMapDataLatLonLines <- function(range_lon=c(-180,180),range_lat=c(-90,90),n=1
   dt[(lon %betweenLon% range_lon) & (lat %betweenLat% range_lat)][]
 }
 
+#' @export
 winkelIII <- function(dtLL,projColNames=c("x_W3","y_W3")){
   dt <- copy(dtLL)
   radLon <- dt$lon %>% deg2rad()
@@ -565,7 +566,7 @@ winkelIII <- function(dtLL,projColNames=c("x_W3","y_W3")){
   dt[,  c(projColNames):=.( lon_W3 , lat_W3 )  ][]
 }
 
-
+#' @export
 eckertIV <- function(dtLL,precision=0.001,projColNames=c("x_EIV","y_EIV")){
   dt <- copy(dtLL)
   radLon <- dt$lon %>% deg2rad()
