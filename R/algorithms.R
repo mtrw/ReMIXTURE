@@ -2,7 +2,13 @@
 
 
 ReMIXTURE$set( "public" , "run" ,
-  function(iterations=2500,subsample_proportions=c(0.8,0.9),h_cutoffs=seq(0.001,0.2,l=6),colpalette_heatmap=colorRampPalette(c("#f2f5ff","#214feb","#001261"))(100),...){
+  function(
+    iterations=2500,
+    subsample_proportions=c(1.0),
+    h_cutoffs,
+    diagnosticPlotMDSclusters=FALSE,
+    ...
+  ){
     ce("------------------------------------------------")
     ce("Running ReMixture analysis ...")
     ce("------------------------------------------------\n")
@@ -33,6 +39,11 @@ ReMIXTURE$set( "public" , "run" ,
     nind <- ncol(private$m)
     ngp <- nrow(gp_info)
 
+    # In case we are doing diagnostic MDS plots, get the coords
+    if( diagnosticPlotMDSclusters==TRUE ){
+      mds <- self$plot_MDS(doPlot = FALSE)
+    }
+
     #container for parameter testing output
     param_test_out <- expand.grid( #innermost loops first
       gp_idx=gp_info$gp, #
@@ -46,11 +57,11 @@ ReMIXTURE$set( "public" , "run" ,
 
     param_test_insert <- 1:ngp
     results_insert <- 1
-    for(pr_samp in subsample_proportions){
+    for( pr_samp in subsample_proportions ){
       nSelectPerGrp <- round(ind_info[,.N,by=.(gp)][,min(N)] * pr_samp)
       for(hcut in h_cutoffs){
         #dev hcut=.013; pr_samp=0.8
-        ce("Begin analysis for h_cutoff==",round(hcut,digits=4)," and subsample_proportions==",pr_samp," ...")
+        ce( "Begin analysis for h_cutoff==" , round(hcut,digits=4) , " and subsample_proportions==" , pr_samp , " ..." )
 
         #local result containers
         nclust_counts <- rep(0L,length(gp_list))
@@ -60,6 +71,7 @@ ReMIXTURE$set( "public" , "run" ,
         counts_mat_accumulator_empty <- counts_mat
         counts_2_mat <- matrix(0.0,nrow=ngp,ncol=ngp)
         colnames(counts_2_mat) <- rownames(counts_2_mat) <- gp_list
+        ind_info[,clust:=NA_integer_]
 
         ce("\tIterating ...")
         for(it in 1:nits){ #Begin iteration loop
@@ -69,7 +81,56 @@ ReMIXTURE$set( "public" , "run" ,
           #Subsample
           ss_selector <- ind_info[,.(s=sample(idx,nSelectPerGrp)),by=.(gp_idx)]$s
           #Cluster
+
           ind_info[ss_selector, clust:=cutree(hclust(as.dist(private$m[ss_selector,ss_selector])),h=hcut)]
+          # Diagnostic plots if requested
+          if(diagnosticPlotMDSclusters==TRUE){
+            plot(
+              mds$mds[ss_selector,]$axisA,
+              mds$mds[ss_selector,]$axisB,
+              col=mds$legend[data.table(region=mds$mds[ss_selector,]$region),on=.(region)]$col,
+              xlim=range(mds$mds$axisA),
+              ylim=range(mds$mds$axisB),
+              xlab="Axis 1",
+              ylab="Axis 2",
+              pch=20,
+              cex=0.4,
+              main=paste0( "Iteration " , it , "; Subsampling " , pr_samp*100,"%; H-cutoff ", round(hcut,2) )
+            )
+            l_ply(unique(ind_info[ss_selector,]$clust),function(cl){
+              #browser()
+              cl_selector <- which(ind_info$clust==cl)
+              if(length(cl_selector)==1){
+                points(
+                  mds$mds[cl_selector,]$axisA,
+                  mds$mds[cl_selector,]$axisB,
+                  col="#00000077",
+                  pch=20,
+                  cex=2
+                )
+              } else if(length(cl_selector)==2){
+                lines(
+                  mds$mds[cl_selector,]$axisA,
+                  mds$mds[cl_selector,]$axisB,
+                  col="#00000077",
+                  lwd=11
+                )
+              } else {
+                hull <- chull(mds$mds[cl_selector,]$axisA, mds$mds[cl_selector,]$axisB)
+                polygon(
+                  mds$mds[cl_selector,][hull,]$axisA,
+                  mds$mds[cl_selector,][hull,]$axisB,
+                  col="#00000033"
+                )
+              }
+            })
+            wait("Press any key to go plot hulls for the next iteration ...")
+
+
+
+
+          }
+
           counts_mat_accumulator <- counts_mat_accumulator_empty
           nclust_counts <- nclust_counts + (t<-ind_info[ss_selector,.(add=nu(clust)),by=.(gp_idx)][order(gp_idx),]$add) # in how many unique clusters does each region occur
           nclust_counts_2 <- nclust_counts_2 + t**2

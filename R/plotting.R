@@ -275,28 +275,44 @@ ReMIXTURE$set( "public" , "plot_distance_densities" ,
         dt1[ region1==r1 & region2==r2 , lines(x,y,col=col,lwd=lwd) ]
       }
     }
-#
-#     print(ggplot(dt1,aes(x=x,y=y)) +
-#       geom_line() +
-#       xlim(set_xlims) +
-#       theme_classic() +
-#       facet_grid(region1~region2) +
-#       labs(x=NULL,y=NULL))
-#
-#     dt2 <- ldply(unique(colnames(private$m)),function(r){
-#       selr <- rownames(private$m)==r
-#       data.table(
-#         x=(0:1000)/1000,
-#         y=density(private$m[selr,],bw=set_bw,from=0,to=1,n=1001)$y,
-#         region=r
-#       )
-#     }) %>% setDT
-#     wait("Press [ENTER] for next plot ...")
-#     print(ggplot(dt2,aes(x=x,y=y,colour=region)) +
-#       geom_line() +
-#       xlim(set_xlims) +
-#       theme_classic() +
-#       labs(colour="Region" , x=NULL, y=NULL))
   }
 )
 
+
+
+
+ReMIXTURE$set( "public" , "plot_MDS" ,
+  function(
+    PCs=c(1L,2L),
+    colPalette=c("#88000088","#88880088","#00880088","#00008888","#88008888"),
+    distanceMatrix=NULL,
+    showLegend=TRUE,
+    doPlot=TRUE,
+    ...
+  ){
+    if( length(PCs)!=2L | !(is.numeric(PCs) | is.integer(PCs)) ){ stop("`PCs` must be a numeric or integer vector of length 2") }
+    if(!is.null(distanceMatrix)){m<-distanceMatrix}
+    colTable <- data.table(
+      region = unique(colnames(private$m))
+    )[,col:=colorRampPalette(colPalette)(.N)]
+    dim <- max(PCs)
+    mds <- cmdscale( as.dist(private$m) , k=dim )  # Also has function of ignoring the Inf diagonals (done for reasons that were presumably good at the time)
+
+    if(doPlot==TRUE){
+      plot(
+        mds[,PCs[1]],
+        mds[,PCs[2]],
+        pch=20,
+        col=colTable[data.table(region=rownames(mds)),on=.(region)]$col,
+        cex=0.4,
+        xlab=paste0("Axis ",PCs[1]),
+        ylab=paste0("Axis ",PCs[2])
+      )
+      if(showLegend==TRUE){
+        legend(min(mds[,PCs[1]]),max(mds[,PCs[2]]),colTable$region,colTable$col,bg="#FFFFFFAA")
+      }
+    }
+
+    invisible(return(list(axes=PCs,mds=data.table(region=rownames(mds),axisA=mds[,1],axisB=mds[,2]),legend=colTable)))
+  }
+)
