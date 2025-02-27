@@ -288,6 +288,8 @@ ReMIXTURE$set( "public" , "plot_MDS" ,
     distanceMatrix=NULL,
     showLegend=TRUE,
     doPlot=TRUE,
+    pch=20,
+    cex=0.4,
     ...
   ){
     if( length(PCs)!=2L | !(is.numeric(PCs) | is.integer(PCs)) ){ stop("`PCs` must be a numeric or integer vector of length 2") }
@@ -302,11 +304,12 @@ ReMIXTURE$set( "public" , "plot_MDS" ,
       plot(
         mds[,PCs[1]],
         mds[,PCs[2]],
-        pch=20,
+        pch=pch,
         col=colTable[data.table(region=rownames(mds)),on=.(region)]$col,
-        cex=0.4,
+        cex=cex,
         xlab=paste0("Axis ",PCs[1]),
-        ylab=paste0("Axis ",PCs[2])
+        ylab=paste0("Axis ",PCs[2]),
+        ...
       )
       if(showLegend==TRUE){
         legend(min(mds[,PCs[1]]),max(mds[,PCs[2]]),colTable$region,colTable$col,bg="#FFFFFFAA")

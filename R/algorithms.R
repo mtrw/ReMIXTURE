@@ -1,11 +1,17 @@
 
-
+# #' @name Run
+# #' @description Run the ReMIXTURE analysis that calculates the diversity measures within and between regions.
+# #' @param iterations An integer. If subsampling (which you should be), how many times to redo the analysis with a new random subsample of individuals. [100]
+# #' @param subsample_proportions A numeric value or vector of them. Sets the number of samples from each group to be used each iteration. The number used will be this proportion of the smallest region group, i.e., if the smallest region group has 10 samples and this is set to 0.8, each iteration will sample 8 individuals from each region. [0.8]
+# #' @param h_cutoffs A numeric value or vector of them. The diversity measures are based on clustering samples. This defines how large the clusters are--lower h_cutoff values create many small clusters of very closely related individuals, and higher h_cutoff create a few large clusters of more distantly related individuals. To choose a good range of values start with a spread of ten that span the entire range of distances in your distance matrix. See the vignette. [Ten equal points across the range of distances, i.e. seq(min(self$dm),max(self$dm),length.out=10)]
+# #' @param diagnosticPlotMDSclusters Logical. A way to look at how the clusters look. Will create an MDS plot and, for each iteration, draw a hull engulfing each cluster of points (or a dot over singleton clusters, or a line connecting clusters of two). I typically set iterations to 1 when using this. [FALSE]
+# #' @return nothing.
 
 ReMIXTURE$set( "public" , "run" ,
   function(
-    iterations=2500,
-    subsample_proportions=c(1.0),
-    h_cutoffs,
+    iterations=100,
+    subsample_proportions=c(0.8),
+    h_cutoffs=seq(min(self$dm),max(self$dm),length.out=10),
     diagnosticPlotMDSclusters=FALSE,
     ...
   ){
@@ -59,6 +65,7 @@ ReMIXTURE$set( "public" , "run" ,
     results_insert <- 1
     for( pr_samp in subsample_proportions ){
       nSelectPerGrp <- round(ind_info[,.N,by=.(gp)][,min(N)] * pr_samp)
+      ce("Each iteration, ",nSelectPerGrp," samples from each region will be used.\n")
       for(hcut in h_cutoffs){
         #dev hcut=.013; pr_samp=0.8
         ce( "Begin analysis for h_cutoff==" , round(hcut,digits=4) , " and subsample_proportions==" , pr_samp , " ..." )

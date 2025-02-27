@@ -43,6 +43,7 @@ See README on Github--documentation is coming soon.
 \item \href{#method-NA-plot_h_optimisation}{\code{ReMIXTURE$plot_h_optimisation()}}
 \item \href{#method-NA-plot_maps}{\code{ReMIXTURE$plot_maps()}}
 \item \href{#method-NA-plot_distance_densities}{\code{ReMIXTURE$plot_distance_densities()}}
+\item \href{#method-NA-plot_MDS}{\code{ReMIXTURE$plot_MDS()}}
 \item \href{#method-unknown-clone}{\code{ReMIXTURE$clone()}}
 }
 }
@@ -52,10 +53,10 @@ See README on Github--documentation is coming soon.
 \subsection{Method \code{run()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$run(
-  iterations = 2500,
-  subsample_proportions = c(0.8, 0.9),
-  h_cutoffs = seq(0.001, 0.2, l = 6),
-  colpalette_heatmap = colorRampPalette(c("#f2f5ff", "#214feb", "#001261"))(100),
+  iterations = 100,
+  subsample_proportions = c(0.8),
+  h_cutoffs = seq(min(self$dm), max(self$dm), length.out = 10),
+  diagnosticPlotMDSclusters = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -73,15 +74,15 @@ Create a new ReMIXTURE object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{distance_matrix}}{An all-vs-all, full numeric distance matrix, with rownames and
-colnames giving the region of origin of the corresponding individual.}
+\item{\code{distance_matrix}}{An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.}
 
-\item{\code{region_table}}{A data.table describing the lat(y)/long(x)s of each region (numeric or integer values), with columns named "region", "x" and "y".}
+\item{\code{region_table}}{A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 a new \code{ReMIXTURE} object.
+penis = function(){}
 }
 }
 \if{html}{\out{<hr>}}
@@ -138,6 +139,24 @@ a new \code{ReMIXTURE} object.
   set_bw = 0.001,
   set_xlims = c(0, 1),
   samePlot = FALSE
+)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-NA-plot_MDS"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-plot_MDS}{}}}
+\subsection{Method \code{plot_MDS()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_MDS(
+  PCs = c(1L, 2L),
+  colPalette = c("#88000088", "#88880088", "#00880088", "#00008888", "#88008888"),
+  distanceMatrix = NULL,
+  showLegend = TRUE,
+  doPlot = TRUE,
+  pch = 20,
+  cex = 0.4,
+  ...
 )}\if{html}{\out{</div>}}
 }
 

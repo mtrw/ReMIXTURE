@@ -33,9 +33,8 @@ ReMIXTURE <- R6::R6Class(
 
     #' @description
     #' Create a new ReMIXTURE object.
-    #' @param distance_matrix An all-vs-all, full numeric distance matrix, with rownames and
-    #'      colnames giving the region of origin of the corresponding individual.
-    #' @param region_table A data.table describing the lat(y)/long(x)s of each region (numeric or integer values), with columns named "region", "x" and "y".
+    #' @param distance_matrix An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.
+    #' @param region_table A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.
     #' @return a new `ReMIXTURE` object.
     initialize = function(distance_matrix,region_table){
 
@@ -85,6 +84,8 @@ ReMIXTURE <- R6::R6Class(
       ce("------------------------------------------------")
     }
 
+
+    #' penis = function(){}
   )
 )
 
