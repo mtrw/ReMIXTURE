@@ -582,6 +582,7 @@ eckertIV <- function(dtLL,precision=0.001,projColNames=c("x_EIV","y_EIV")){
   dt[,  c(projColNames):=.( lon_W3 , lat_W3 )  ][]
 }
 
+#' @export
 equirectangular      <- function(dtLL,projColNames=c("x_ER","y_ER")){
   copy(dtLL)[,c(projColNames):=.(lon,lat)][]
 }
@@ -691,9 +692,10 @@ plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("bo
 
 
 
-
-
-
+rTruncNorm <- function(n = 1, mean = 0, sigma = 1, range = c(-Inf, Inf)) {
+  runif(n, pnorm(range[1], mean, sigma), pnorm(range[2], mean, sigma)) %>%
+    qnorm(mean, sigma)
+}
 
 
 

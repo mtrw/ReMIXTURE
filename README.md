@@ -70,7 +70,7 @@ One objective and natural h-cutoff value to choose is the one that yields the sa
 my_analysis$plot_h_optimisation() # Run 3 seems good
 ```
 
-The point of maximum multi-region clusters is another defensible 'objective' choice when the analysis aims to emphasise regional overlap. When in doubt, **a point approximately midway between these two** is a good bet and I aim for this to become the 'standard' paractice.
+The point of maximum multi-region clusters is another defensible 'objective' choice when the analysis aims to emphasise regional overlap. When in doubt, **a point approximately midway between these two** is a good bet and I aim for this to become the 'stndard' paractice.
 
 A few other diagnostic plot options exist:
 

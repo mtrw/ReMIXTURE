@@ -12,6 +12,7 @@
 #'
 #' See README on Github--documentation is coming soon.
 #'
-#' @docType _PACKAGE
+#' @keywords internal
+"_PACKAGE"
 #' @name ReMIXTURE
 NULL

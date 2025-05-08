@@ -2,6 +2,7 @@
 
 export(ReMIXTURE)
 export(eckertIV)
+export(equirectangular)
 export(winkelIII)
 import(R6)
 import(data.table)

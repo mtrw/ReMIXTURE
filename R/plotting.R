@@ -72,6 +72,7 @@ ReMIXTURE$set( "public" , "plot_h_optimisation" ,
     if(private$runflag==FALSE){
       stop("Analysis has not been run. Perform using `$run()`")
     }
+    #if(private$)
     d <- setDT(ldply(private$results$runs,function(r){
       t <- c(get_upper_tri(r$overlap),diag(r$overlap))
       tt <- t[t>0]
@@ -134,22 +135,25 @@ ReMIXTURE$set( "public" , "plot_maps" ,
       region=colnames(st),
       totDiv=private$results$runs[[run]]$diversity
     )
-    rt[,uniqueDiv:=private$results$runs[[run]]$overlap[r,r],by=.(r=region)]
-    rt <- private$rt[rt,on=.(region)]
-    divRange <- range(rt$totDiv,rt$uniqueDiv,st)
 
-    rt[,wTotDiv:=(c(totDiv,divRange) %>% scale_between(width_lims[1],width_lims[2]))[1:.N]]
-    rt[,wUniqueDiv:=(c(uniqueDiv,divRange) %>% scale_between(width_lims[1],width_lims[2]))[1:.N]]
-    wst <- st
-    wst[,] <- c(st,range(st)) %>% scale_between(width_lims[1],width_lims[2]) %>% head(-2)
+    rt[,uniqueDiv:=private$results$runs[[run]]$overlap[r,r],by=.(r=region)] # could just pull out diagonal but this seems safer
+    rt[,propUniqueDiv:=uniqueDiv/totDiv,by=.(r=region)]
+    rt <- private$rt[rt,on=.(region)]
+    rt[,wTotDiv:=totDiv %>% scale_between(width_lims[1],width_lims[2])]
+    rt[,wUniqueDiv:=propUniqueDiv*wTotDiv]
+    wst <- apply(st,1,function(r) (r/rt$totDiv)*rt$wTotDiv)
 
     ct <- if(is.null(curvature_matrix)){
       matrix(0.0,ncol=nrow(rt),nrow=nrow(rt),dimnames=list(rt$region,rt$region))
+    } else if (curvature_matrix[1]=="random") {
+      cm <- matrix(rnorm(nrow(private$rt)**2,0,0.3),nrow=nrow(private$rt))
+      rownames(cm) <- colnames(cm) <- private$rt$region
+      cm
     } else {
       curvature_matrix
     }
 
-    at <- st
+    at <- wst
     diag(at) <- mean(at) # just any value not at the extreme, so it doesn't affect the scaling of the shared div values
     at[,] <- at %>% scale_between(alpha_lims[1],alpha_lims[2])
 
@@ -284,12 +288,12 @@ ReMIXTURE$set( "public" , "plot_distance_densities" ,
 ReMIXTURE$set( "public" , "plot_MDS" ,
   function(
     PCs=c(1L,2L),
-    colPalette=c("#88000088","#88880088","#00880088","#00008888","#88008888"),
+    colPalette=c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88"),
     distanceMatrix=NULL,
     showLegend=TRUE,
     doPlot=TRUE,
     pch=20,
-    cex=0.4,
+    cex=0.8,
     ...
   ){
     if( length(PCs)!=2L | !(is.numeric(PCs) | is.integer(PCs)) ){ stop("`PCs` must be a numeric or integer vector of length 2") }
@@ -319,3 +323,52 @@ ReMIXTURE$set( "public" , "plot_MDS" ,
     invisible(return(list(axes=PCs,mds=data.table(region=rownames(mds),axisA=mds[,1],axisB=mds[,2]),legend=colTable)))
   }
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ReMIXTURE$set( "public" , "plot_dendrogram" ,
+               function(
+    PCs=c(1L,2L),
+    colPalette=c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88"),
+    distanceMatrix=NULL,
+    showLegend=TRUE,
+    doPlot=TRUE,
+    pch=20,
+    cex=0.8,
+    ...
+               ){
+                 if( length(PCs)!=2L | !(is.numeric(PCs) | is.integer(PCs)) ){ stop("`PCs` must be a numeric or integer vector of length 2") }
+                 if(!is.null(distanceMatrix)){m<-distanceMatrix}
+                 colTable <- data.table(
+                   region = unique(colnames(private$m))
+                 )[,col:=colorRampPalette(colPalette)(.N)]
+                 dim <- max(PCs)
+                 mds <- cmdscale( as.dist(private$m) , k=dim )  # Also has function of ignoring the Inf diagonals (done for reasons that were presumably good at the time)
+
+                 if(doPlot==TRUE){
+                   hc <- hclust(private$dm)
+                   if(showLegend==TRUE){
+                     legend(min(mds[,PCs[1]]),max(mds[,PCs[2]]),colTable$region,colTable$col,bg="#FFFFFFAA")
+                   }
+                 }
+
+                 invisible(return(list(axes=PCs,mds=data.table(region=rownames(mds),axisA=mds[,1],axisB=mds[,2]),legend=colTable)))
+               }
+)
+
+
+
+
