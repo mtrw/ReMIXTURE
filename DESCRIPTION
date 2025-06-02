@@ -16,18 +16,12 @@ Imports:
     magrittr,
     R6,
     plyr,
-    ggplot2,
-    pheatmap
+    ggplot2
 Collate:
-    ReMIXTURE.R
     imports.R
-    datadescript.R
     utility.R
+    dataDescript.R
     class.R
-    validators.R
-    getset.R
-    algorithms.R
-    plotting.R
 Depends: 
     R (>= 2.10)
 Suggests: 
