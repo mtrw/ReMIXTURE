@@ -1,11 +1,10 @@
 Package: ReMIXTURE
-Title: Pretty and enlightening region-wise "similarity" plots built using arbitrary distance matricies between individual samples from each region. Conceived for genetic distance data but probably has wider applications.
+Title: ReMIXTURE
 Version: 0.1.0
 Authors@R: 
     person("M Timothy", "Rabanus-Wallace", , "mtrw85@gmail.com", role = c("aut", "cre"))
-Description: Begins by using an algorithm to take data from collections of items with known inter-item distances and some 'region' property, calculate an overlap statistic between regions suitable to questions like "how similar is the collection of chilli peppers collected in this region to the collections found in other regions". Comparable values are given to describe the total "diversity" of items in each region, and the proportion of items that are unique to a region.
-    Then it plots these overlaps, diversity, and uniqueness scores as lines connecting regions on a globe.
-    An earlier version of this method is described in Rabanus-Wallace & Tripodi et al. (2021), this newer version differs significantly, with the algorithm updated to give much more intuitively interpretable results.
+Description: 
+    Implementation of the ReMIXTURE method to create pretty and intuitive plots showing how (genetic or other) diversity is distributed and shared between regions of the globe. An earlier version of this method is described in Rabanus-Wallace & Tripodi et al. (2021), this newer version differs significantly, with the algorithm updated to give much more intuitively interpretable results.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -16,14 +15,15 @@ Imports:
     magrittr,
     R6,
     plyr,
-    ggplot2
+    ggplot2,
+    truncnorm
 Collate:
     imports.R
     utility.R
     dataDescript.R
     class.R
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 Suggests: 
     knitr,
     rmarkdown

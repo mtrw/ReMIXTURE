@@ -1,15 +1,15 @@
-#' Metadata for map plotting
+#' Example region table
 #'
-#' A dataset contains metadata, used for map plotting.
+#' The region table contains metadata, used for map plotting.
 #'
-#' @format A data table object with 11 rows and 4 variables:
+#' @format A data table object with 11 rows and 3 variables:
 #' \describe{
 #'   \item{region}{A region, as stated in colnames or rownames in a distance matrix}
 #'   \item{y}{y coordinates for a region center, i.e., standard latitude values in decimal format as you could read off Google maps}
 #'   \item{x}{x coordinates for a region center, i.e., standard longitude values in decimal format as you could read off Google maps}
 #' }
 #' @source {Rabanus-Wallace & Tripodi et al. (2021) }
-"ReMIXTURE_example_region_positions"
+"ReMIXTURE_example_region_table"
 
 #' Matrix of distances between different samples
 #'

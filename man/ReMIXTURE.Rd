@@ -19,17 +19,17 @@ For a short lesson on how to run ReMIXTURE, follow the example below.
 # Create ReMIXTURE analysis object from an inbuilt dataset (Tripodi & Rabanus-Wallace et al. 2021. PNAS).
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 
-rm$plot_distance_densities(samePlot=T)
+rm$plot_distance_densities(samePlot=TRUE)
 par(mfrow=c(1,1)) # reset graphics layout
 rm$plot_MDS()
 
 # Default run
 # A run involves taking a subsample of all the samples in the distance matrix, such that every region has the same number of samples included. This subsample is heirarchically clustered (imagine creatting a dentrogram and cutting it at a certain height). Clusters are then counted. The number of clusters in which a region appears is a proxy for that region's total genetic diversity. The number of clusters in which *only* one region appears is a proxy for the diversity unique to that region. The number of clusters in which members of a pair of clusters appears is a proxy for the diversity that is overlapping between those two regions. the concept is similar to the way a Venn diagram might work. This is done `iterations` times, and all these various counts are averaged at the end.
 
-# How is it decided where the tree is cut? This value 'H' can be set several ways. By default FINISH ME!!! (and eventually turn me into a vignette)
+# How is it decided where the tree is cut? This value 'H' can be set several ways, detailed under $run (and eventually turn me into a vignette)
 rm$run()
 rm$plot_maps(focalRegion = "Central America")
 rm$plot_maps(focalRegion = "Central America",curvature_matrix = "random") # Add curved joining lines (randomly generated)
@@ -37,11 +37,11 @@ rm$plot_maps(focalRegion = "Central America",curvature_matrix = "random") # Add 
 
 # Try different fixed cutoffs (a trial run with low iterations)
 rm$run(
-  iterations=100,
-  h_cutoff = seq(from=0.001,to=0.03,length.out=15)
+  iterations=100
 )
-rm$plot_heatmaps()
 rm$plot_h_optimisation()
+rm$plot_results_grid()
+rm$plot_clustercounts()
 
 rm$plot_maps(
   run=6, #Smaller H emphasises uniqueness
@@ -62,8 +62,9 @@ rm$run(
   h_cutoff = seq(from=0.001,to=0.03,length.out=15),
   h_cutoff_normal_sigma = rep(0.01,15) # Set the standard deviation for each cutoff tried
 )
-rm$plot_heatmaps()
 rm$plot_h_optimisation()
+rm$plot_results_grid()
+rm$plot_clustercounts()
 
 rm$plot_maps(
   run=12, # Strikes a good balance I would say
@@ -90,26 +91,32 @@ rm$plot_maps(
 
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$distance_matrix[1:10,1:10]
 rm$region_table
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$region_table
 rm$distance_matrix[1:10,1:10]
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$run() # Default run settings
 rm$run_results
+rm <- ReMIXTURE$new(
+  distance_matrix = ReMIXTURE_example_distance_matrix,
+  region_table = ReMIXTURE_example_region_table
+)
+rm$plotMDS() # Default settings
+rm$mds
 # Using build-in ReMIXTURE test datasets
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$distance_matrix[1:10,1:10]
 rm$region_table
@@ -121,7 +128,7 @@ rm$region_table
 # See ?ReMIXTURE
 
 ## ------------------------------------------------
-## Method `ReMIXTURE$plot_heatmaps`
+## Method `ReMIXTURE$plot_results_grid`
 ## ------------------------------------------------
 
 # See ?ReMIXTURE
@@ -164,6 +171,8 @@ rm$region_table
 \item{\code{region_table}}{Return the region table with lat/lon information.}
 
 \item{\code{run_results}}{Return the results of a run (performed with \verb{<ReMIXTURE_object>$run()})}
+
+\item{\code{mds}}{Return the mds data (created when \verb{<ReMIXTURE_object>$plotMDS()} is run)}
 }
 \if{html}{\out{</div>}}
 }
@@ -172,7 +181,7 @@ rm$region_table
 \itemize{
 \item \href{#method-ReMIXTURE-new}{\code{ReMIXTURE$new()}}
 \item \href{#method-ReMIXTURE-run}{\code{ReMIXTURE$run()}}
-\item \href{#method-ReMIXTURE-plot_heatmaps}{\code{ReMIXTURE$plot_heatmaps()}}
+\item \href{#method-ReMIXTURE-plot_results_grid}{\code{ReMIXTURE$plot_results_grid()}}
 \item \href{#method-ReMIXTURE-plot_clustercounts}{\code{ReMIXTURE$plot_clustercounts()}}
 \item \href{#method-ReMIXTURE-plot_h_optimisation}{\code{ReMIXTURE$plot_h_optimisation()}}
 \item \href{#method-ReMIXTURE-plot_maps}{\code{ReMIXTURE$plot_maps()}}
@@ -206,7 +215,7 @@ A new ReMIXTURE object.
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$distance_matrix[1:10,1:10]
 rm$region_table
@@ -216,7 +225,7 @@ rm$region_table
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$region_table
 rm$distance_matrix[1:10,1:10]
@@ -226,7 +235,7 @@ rm$distance_matrix[1:10,1:10]
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$run() # Default run settings
 rm$run_results
@@ -234,10 +243,20 @@ rm$run_results
 \if{html}{\out{</div>}}
 
 \if{html}{\out{<div class="r example copy">}}
+\preformatted{rm <- ReMIXTURE$new(
+  distance_matrix = ReMIXTURE_example_distance_matrix,
+  region_table = ReMIXTURE_example_region_table
+)
+rm$plotMDS() # Default settings
+rm$mds
+}
+\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="r example copy">}}
 \preformatted{# Using build-in ReMIXTURE test datasets
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_positions
+  region_table = ReMIXTURE_example_region_table
 )
 rm$distance_matrix[1:10,1:10]
 rm$region_table
@@ -303,22 +322,18 @@ NULL
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ReMIXTURE-plot_heatmaps"></a>}}
-\if{latex}{\out{\hypertarget{method-ReMIXTURE-plot_heatmaps}{}}}
-\subsection{Method \code{plot_heatmaps()}}{
-Plot heatmaps representing the unique and overlapped diversity recorded in a ReMIXTURE run. If multiple runs were done, then the user must press \link{ENTER} to get the heatmaps for each run.
-
-Heatmaps are extremely useful for assessing how different values of \eqn{H} affect the output.
+\if{html}{\out{<a id="method-ReMIXTURE-plot_results_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-ReMIXTURE-plot_results_grid}{}}}
+\subsection{Method \code{plot_results_grid()}}{
+Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per \code{plot_maps()}. If multiple runs were done, then the user must press \link{ENTER} to get the heatmaps for each run.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_heatmaps(colPalette = c("#f2f5ff", "#000570"), ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_results_grid(...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{colPalette}}{\link{c("#f2f5ff","#000570")} The colour palette for the heatmap. A vector of two or more colours (Hex-RGB or names are fine), which will be interpolated to make the map.}
-
-\item{\code{...}}{Additional arguments passed to \code{stats::heatmap()}}
+\item{\code{...}}{Additional arguments ultimately passed to \code{base::plot()}}
 }
 \if{html}{\out{</div>}}
 }
@@ -388,7 +403,8 @@ Produces the canonical ReMIXTURE plots.
   range_lon = c(-179, 179),
   range_lat = c(-85, 85),
   width_max = 10,
-  alpha_max = NULL,
+  alpha_max = 1,
+  diversityCirclesFocalOnly = FALSE,
   projection = eckertIV,
   curvature_matrix = NULL
 )}\if{html}{\out{</div>}}
@@ -397,7 +413,7 @@ Produces the canonical ReMIXTURE plots.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{run}}{\link{NULL} If multiple runs were done, choose which run to use. This is best assessed using \verb{<ReMIXTURE Object>$plot_heatmaps()} and \verb{<ReMIXTURE Object>$plot_h_optimisation()}.}
+\item{\code{run}}{\link{NULL} If multiple runs were done, choose which run to use. This is best assessed using \verb{<ReMIXTURE Object>$plot_h_optimisation()}, \verb{<ReMIXTURE Object>$plot_results_grid()}, and \verb{<ReMIXTURE Object>$plot_clustercounts()}.}
 
 \item{\code{focalRegion}}{\link{NULL} A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will eminate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of \verb{par(mfrow=c(<number of rows>,<number of columns>))}.}
 
@@ -405,13 +421,15 @@ Produces the canonical ReMIXTURE plots.
 
 \item{\code{range_lat}}{\link{c(-85.0,85.0)} Limit the map to some range of latitudes. Must be a vector of 2 numbers.}
 
-\item{\code{width_max}}{\link{10.0} The maximum width of the circles/lines, in units of lat/lons.}
+\item{\code{width_max}}{\link{10.0} The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.}
 
-\item{\code{alpha_max}}{[] Normally the alpha of the connecting lines is scaled so}
+\item{\code{alpha_max}}{\link{1.0} As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.}
 
-\item{\code{projection}}{[]}
+\item{\code{diversityCirclesFocalOnly}}{\link{FALSE} Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions.}
 
-\item{\code{curvature_matrix}}{[]}
+\item{\code{projection}}{\link{EckertIV} A function the performs projection of the map coordinates. Included in the package are \code{eckertIV}, \code{winkelIII}, and \code{equirectangular}. A custom function can be given, its first argument, named 'dtLL' should take a data.table with columns \code{lon} and \code{lat}. The second argument, named 'projColNames', should take a length-2 character vector. The output should be a data.table with columns containing the transformed longitude and latitude values. These columns should be named as per the entries in the input 'projColNames'.}
+
+\item{\code{curvature_matrix}}{\link{NULL} A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.}
 }
 \if{html}{\out{</div>}}
 }
@@ -439,9 +457,9 @@ Each plot tells the story from the perspective of a focal region. Each region is
   set_bw = 0.001,
   set_xlims = range(private$m[upper.tri(private$m)]),
   samePlot = FALSE,
-  H = "auto",
+  H = NULL,
   truncNorm_sd = NULL,
-  truncNorm_lims = range(private$m[upper.tri(private$m)])
+  truncNorm_lims = NULL
 )}\if{html}{\out{</div>}}
 }
 

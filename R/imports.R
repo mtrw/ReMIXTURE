@@ -6,5 +6,5 @@ NULL
 NULL
 #' @import plyr
 NULL
-#' @import ggplot2
+#' @import truncnorm
 NULL

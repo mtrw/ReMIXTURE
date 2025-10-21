@@ -12,7 +12,7 @@ argNotGiven <- function(x){
   is.null(x)
 }
 
-clamp <- function(x,lower=min(x,na.rm=T),upper=max(x,na.rm=T)){
+clamp <- function(x,lower=min(x,na.rm=TRUE),upper=max(x,na.rm=TRUE)){
   x[x<lower] <- lower
   x[x>upper] <- upper
   x
@@ -47,21 +47,21 @@ clampNearestLon <- function(lon,range_lon,sideFlag=FALSE){
 
 mat2dtLL <- function(m){ data.table(lon=m[1,],lat=m[2,]) }
 mat2dtXY <- function(m){ data.table(x=m[1,],y=m[2,]) }
-# matrix(1:4,byr=T,nc=2) %T>% print %>% mat2dtXY
+# matrix(1:4,byr=TRUE,nc=2) %T>% print %>% mat2dtXY
 
 #dtXY2mat <- function(dt){ ... do we need it?  }
 
 null_plot <- function(x,y,xlab=NA,ylab=NA,revx=F,revy=F,...){
-  xl<-range(x,na.rm=T)
-  yl<-range(y,na.rm=T)
-  if(revx==T){ xl <- rev(xl) }
-  if(revy==T){ yl <- rev(yl) }
+  xl<-range(x,na.rm=TRUE)
+  yl<-range(y,na.rm=TRUE)
+  if(revx==TRUE){ xl <- rev(xl) }
+  if(revy==TRUE){ yl <- rev(yl) }
   plot(NULL,xlim=xl,ylim=yl,xlab=xlab,ylab=ylab,...)
 }
 
 scale_between <- function(x,lower,upper){
-  if(all(x==mean(x,na.rm=T))) return(rep(mean(c(lower,upper),na.rm=T),length(x)))
-  ( x - min(x,na.rm=T) ) / (max(x,na.rm=T)-min(x,na.rm=T)) * (upper-lower) + lower
+  if(all(x==mean(x,na.rm=TRUE))) return(rep(mean(c(lower,upper),na.rm=TRUE),length(x)))
+  ( x - min(x,na.rm=TRUE) ) / (max(x,na.rm=TRUE)-min(x,na.rm=TRUE)) * (upper-lower) + lower
 }
 # 1:10 %>% scale_between(-100,1)
 
@@ -89,18 +89,18 @@ fold_matrix <- function(m){ #add lower and upper so the result is symmetrical
   m[upper.tri(m)] <- t(m)[upper.tri(m)] #upper = lower
   m
 }
-# matrix(1:4,byr=T,nc=2) %T>% print %>% fold_matrix()
+# matrix(1:4,byr=TRUE,nc=2) %T>% print %>% fold_matrix()
 
 
 rev_mat_cols <- function(m){
   apply(m,1,rev) %>% t
 }
-# matrix(1:6,byr=T,nc=3) %T>% print %>% rev_mat_j()
+# matrix(1:6,byr=TRUE,nc=3) %T>% print %>% rev_mat_j()
 
 rev_mat_rows <- function(m){
   apply(m,2,rev)
 }
-# matrix(1:6,byr=T,nc=3) %T>% print %>% rev_mat_i()
+# matrix(1:6,byr=TRUE,nc=3) %T>% print %>% rev_mat_i()
 
 round2dp <- function(x){
   round(x,digits = 2)
@@ -274,7 +274,7 @@ curved_rounded_line <- function(x1,y1,x2,y2,width=1,curvature=0,n=200){
   # n <- 30
   # width <- 2
   if(curvature==0){ return(rounded_line(x1,y1,x2,y2,width,n)) }
-  if(! (curvature>-pi & curvature<pi) ){ stop() }
+  if(! (curvature>-pi & curvature<pi) ){ stop("Curvatures must be in [-pi,+pi]") }
   reflectX <- sign(curvature)==1
   curvature <- abs(curvature)
   l <- euc_dist(x1,y1,x2,y2)
@@ -554,6 +554,14 @@ makeMapDataLatLonLines <- function(range_lon=c(-180,180),range_lat=c(-90,90),n=1
   dt[(lon %betweenLon% range_lon) & (lat %betweenLat% range_lat)][]
 }
 
+#' Winkel III map projection
+#'
+#' @description
+#' One of ReMIXTURE's three inbuilt map projection functions, the Winkel Tripel aka Winkel III. See (https://en.wikipedia.org/wiki/Winkel_tripel_projection)
+#'
+#' @param dtLL A data.table with at minimum two numerical columns, one named 'lat' and the other 'lon', containing latitude and longitude points (in degrees) to be transformed.
+#' @param projColNames A length-2 character vector. In the returned data.table, what should the transformed columns be named?
+#'
 #' @export
 winkelIII <- function(dtLL,projColNames=c("x_W3","y_W3")){
   dt <- copy(dtLL)
@@ -566,6 +574,14 @@ winkelIII <- function(dtLL,projColNames=c("x_W3","y_W3")){
   dt[,  c(projColNames):=.( lon_W3 , lat_W3 )  ][]
 }
 
+#' Eckert IV Map Projection
+#'
+#' @description
+#' One of ReMIXTURE's three inbuilt map projection functions, the Eckert IV. See (https://en.wikipedia.org/wiki/Eckert_IV_projection)
+#'
+#' @param dtLL A data.table with at minimum two numerical columns, one named 'lat' and the other 'lon', containing latitude and longitude points (in degrees) to be transformed.
+#' @param projColNames A length-2 character vector. In the returned data.table, what should the transformed columns be named?
+#'
 #' @export
 eckertIV <- function(dtLL,precision=0.001,projColNames=c("x_EIV","y_EIV")){
   dt <- copy(dtLL)
@@ -582,8 +598,16 @@ eckertIV <- function(dtLL,precision=0.001,projColNames=c("x_EIV","y_EIV")){
   dt[,  c(projColNames):=.( lon_W3 , lat_W3 )  ][]
 }
 
+#' Equirectangular Map Projection
+#'
+#' @description
+#' One of ReMIXTURE's three inbuilt map projection functions, the simple equirectangular projection. See (https://en.wikipedia.org/wiki/Equirectangular_projection)
+#'
+#' @param dtLL A data.table with at minimum two numerical columns, one named 'lat' and the other 'lon', containing latitude and longitude points (in degrees) to be transformed.
+#' @param projColNames A length-2 character vector. In the returned data.table, what should the transformed columns be named?
+#'
 #' @export
-equirectangular      <- function(dtLL,projColNames=c("x_ER","y_ER")){
+equirectangular <- function(dtLL,projColNames=c("x_ER","y_ER")){
   copy(dtLL)[,c(projColNames):=.(lon,lat)][]
 }
 
@@ -697,8 +721,44 @@ rTruncNorm <- function(n = 1, mean = 0, sigma = 1, range = c(-Inf, Inf)) {
     qnorm(mean, sigma)
 }
 
+drawUnitSquareTopRight <- function(x,y,border="#000000",col="#AA0000",xAdj=0.0,yAdj=0.0,scale=1.0,...){
+  rect(x+xAdj,y+yAdj,x+xAdj+scale,y+yAdj+scale,border=border,col=col,...)
+}
+
+drawUnitCircleTopRight <- function(x,y,border="#000000",col="#AA0000",xAdj=0.0,yAdj=0.0,scale=1.0,n = 180,...){
+  c <- circle_seg(x+0.5+xAdj,y+0.5+yAdj,radius=scale/2,start_radians = 0.0,end_radians = 0.0)
+  polygon(c[1,],c[2,],border=border,col=col,...)
+}
+
+#mat <- as.matrix(rm$run_results$runs[[1]]$overlap)
+heatmap <- function(mat,colPalette=colorRampPalette(c("#3333FFFF","#FFFFFFFF","#FF0000"))(400),NAcol="#BBBBBBFF",labelCex=0.6,...){
+  mat <- d <- as.matrix(mat)
+  n <- nrow(mat)
+  m <- ncol(mat)
+  d[,] <- colPalette[scale_between(mat,1,length(colPalette)) %>% round %>% as.vector()]
+  d[is.na(mat)] <- NAcol # not tested
 
 
 
+  null_plot(1:(n+1),1:(m+1),xaxt="n",yaxt="n",...)
+  axis(2,at=(1:n)+0.5,labels=rownames(d),las=2,cex.axis=labelCex)
+  axis(1,at=(1:n)+0.5,labels=colnames(d),las=3,cex.axis=labelCex)
+  for(i in 1:n){
+    for(j in 1:m){
+      drawUnitSquareTopRight(i,j,col=d[i,j])
+    }
+  }
 
+  heatLegend <- function(){
+    null_plot(0:1,1:(length(colPalette)+1),xaxt="n",yaxt="n")
+    for(j in 1:length(colPalette)){
+      drawUnitSquareTopRight(0,j,border=NA,col=colPalette[j])
+    }
+    axis(2,at=seq(0.5,(length(colPalette)+0.5),l=5),labels=seq(min(mat,na.rm=T),max(mat,na.rm=T),l=5) %>% round(digits = 2),las=2)
+  }
+  heatLegend
+}
+
+# l <- heatmap(mat)
+# l()
 

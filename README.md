@@ -17,7 +17,9 @@ ReMIXTURE is an R package, and to run it requires:
 
 # Demo pipeline and basic method description
 
-Sample data sets are provided. To run an analysis, start with the following pipeline:
+A more comprehensive pipeline, exploring most of the package functionality, is provided in the examples section of `?ReMIXTURE`
+
+Sample data sets are provided. To run a very simple analysis, start with the following pipeline:
 
 ## Install/load
 
@@ -35,10 +37,11 @@ my_analysis <- ReMIXTURE$new(
 )
 ```
 
-## Plot distance densities
+## Plot distance densities and and MDS plot, just good tools for data exploration and selecting H-cutoff options (see later)
 
 ```
-my_analysis$plot_distance_densities(set_xlims = c(0,0.15)) # Press [ENTER] for each plot.
+my_analysis$plot_distance_densities(set_xlims = c(0,0.15)) # Makes multiple plots
+my_analysis$plot_MDS()
 ```
 
 These will be important for choosing parameters to try in the next step ...
@@ -48,7 +51,7 @@ These will be important for choosing parameters to try in the next step ...
 This will:
 
 - Subsample some equal number of individuals from each group, that number being some user-defined proportion of the smallest group size.
-- Heirarchically cluster them, using a user-defined h-cutoff value
+- Heirarchically cluster them (see ?ReMIXTURE section $run for a description of how the H-cutoffs for clustering are chosen)
   - The total diversity of a region is the number of clusters it appears in.
   - The total unique diversity of a region is the clusters it _and only it_ appears in.
   - The diversity overlapped between two regions is the number of clusters they both appear in.
@@ -57,29 +60,7 @@ This will:
 We normally run for a selection of different parameters, the results of all will be saved, and we can use some diagnostic plots later to choose which were suitable for plotting.
 
 ```
-my_analysis$run(iterations = 80,subsample_proportions = c(0.8),h_cutoffs=seq(.008,.04,l=3)) # h-cutoffs are chosen to span the lower end of the range of inter-sample distances, which is where the best values usually lie
-```
-
-## Choose good parameter values
-
-The most important parameter is the h-cutoff. Too low and almost all clusters are singletons, and no overlap between regions is recorded. Too high and all the samples fall into a few or one massive multi-region cluster.
-
-One objective and natural h-cutoff value to choose is the one that yields the same number of single-region and multi-region clusters. By plotting these counts over runs, we can easily see where this point is (the lines cross).
-
-```
-my_analysis$plot_h_optimisation() # Run 3 seems good
-```
-
-The point of maximum multi-region clusters is another defensible 'objective' choice when the analysis aims to emphasise regional overlap. When in doubt, **a point approximately midway between these two** is a good bet and I aim for this to become the 'stndard' paractice.
-
-A few other diagnostic plot options exist:
-
-```
-#A heatmap of cluster counts is helpful to see more detail on what is driving the counts
-my_analysis$plot_heatmaps()
-
-#Counting clusters featuring regions. I like to check that at my favoured runs, no of few regions are being reduced to appearing in a very small number of clusters. Not that this is a really really bad thing. It just makes me more uncomfortable as all values squished up against a hard bound do.
-my_analysis$plot_clustercounts()
+my_analysis$run()
 ```
 
 ## Plot maps
@@ -102,7 +83,7 @@ my_analysis$plot_maps(
 
 # History
 
-The ReMIXTURE concept was first attempted in Rabanus-Wallace & Tripodi et al. (2021) _Global range expansion history of pepper (_Capsicum spp._) revealed by over 10,000 genebank accessions_. PNAS (please use sci-hub if possible). Newer versions have very significant improvements. The algorithm currently in use is described in Barchi et. al. (2023) _Analysis of >3400 worldwide eggplant accessions reveals two independent domestication events and multiple migration-diversification routes_. The Plant Journal.
+The ReMIXTURE concept was first attempted in Rabanus-Wallace & Tripodi et al. (2021) _Global range expansion history of pepper (_Capsicum spp._) revealed by over 10,000 genebank accessions_. PNAS (please use sci-hub if possible). Newer versions have very significant improvements. The algorithm currently in use is not published.
 
 # Future
 
