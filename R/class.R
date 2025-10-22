@@ -596,6 +596,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
       }
+      runN <- 1
       for(i in 1:(length(private$results$runs))){
         #i=1
         ssp <- private$results$runs[[i]]$subsample_proportion
@@ -615,7 +616,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         n <- m <- nrow(ol_ud)
 
         #null_plot(1:(n+1),1:(m+1),xaxt="n",yaxt="n", ylab="This focal region ...",xlab="... is overlapped by this region",main="Results grid\nTotal/unique diversity (diagonal) &\noverlapped diversity (off-diagonal)")
-        null_plot(1:(n+1),1:(m+1),xaxt="n",yaxt="n", ylab="This focal region ...",xlab="... is overlapped by this region",main="Results grid\nTotal/unique diversity (diagonal) &\noverlapped diversity (off-diagonal)")#,...)
+        null_plot(1:(n+1),1:(m+1),xaxt="n",yaxt="n", ylab="This focal region ...",xlab="... is overlapped by this region",main="Results grid for run ",runN,"\nTotal/unique diversity (diagonal) &\noverlapped diversity (off-diagonal)")#,...)
         axis(2,at=(1:n)+0.5,labels=rownames(ol_ud),las=2,cex.axis=0.6)
         axis(1,at=(1:n)+0.5,labels=colnames(ol_ud),las=3,cex.axis=0.6)
         mtext(paste0("(Maximum circle size=",maxDiv," clusters)"), side = 4,cex=.6)
@@ -631,6 +632,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
           }
         }
       }
+      runN <- runN + 1
     },
 
 
@@ -663,7 +665,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       for(i in unique(pd$run)){
         lines(pd[run==i]$xIdx,pd[run==i]$cluster_count,type="b",pch=20)
       }
-      pd[region==region[1],text(xIdx-0.3,cluster_count,paste0("(",run,")"),cex=0.5)]
+      pd[region==region[1],text(xIdx,cluster_count,paste0("(",run,")"),cex=0.5,pos=2)]
 
       invisible(NULL)
     },
@@ -872,6 +874,10 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         }
         if(!is.null(H)){
           if(!is.null(truncNorm_sd)){
+            if(is.null(truncNorm_lims)){
+              ce("Argument `truncNorm_lims` not provided. Will be set to +/- Inf.")
+              truncNorm_lims <- c(-Inf,Inf)
+            }
             require(truncnorm)
             polygon(
               x=c(
