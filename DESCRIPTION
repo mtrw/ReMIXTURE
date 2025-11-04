@@ -22,6 +22,7 @@ Collate:
     utility.R
     dataDescript.R
     class.R
+    zzz.R
 Depends: 
     R (>= 3.5)
 Suggests: 

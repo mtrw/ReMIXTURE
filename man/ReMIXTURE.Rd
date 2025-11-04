@@ -13,77 +13,9 @@ ReMIXTURE is designed for data where many samples exist from many (or ... at lea
 
 This is the first release version of the package, and development is ongoing.
 
-For a short lesson on how to run ReMIXTURE, follow the example below.
+For a short lesson on how to run ReMIXTURE, follow the tutorial in the examples section below.
 }
 \examples{
-# Create ReMIXTURE analysis object from an inbuilt dataset (Tripodi & Rabanus-Wallace et al. 2021. PNAS).
-rm <- ReMIXTURE$new(
-  distance_matrix = ReMIXTURE_example_distance_matrix,
-  region_table = ReMIXTURE_example_region_table
-)
-
-rm$plot_distance_densities(samePlot=TRUE)
-par(mfrow=c(1,1)) # reset graphics layout
-rm$plot_MDS()
-
-# Default run
-# A run involves taking a subsample of all the samples in the distance matrix, such that every region has the same number of samples included. This subsample is heirarchically clustered (imagine creatting a dentrogram and cutting it at a certain height). Clusters are then counted. The number of clusters in which a region appears is a proxy for that region's total genetic diversity. The number of clusters in which *only* one region appears is a proxy for the diversity unique to that region. The number of clusters in which members of a pair of clusters appears is a proxy for the diversity that is overlapping between those two regions. the concept is similar to the way a Venn diagram might work. This is done `iterations` times, and all these various counts are averaged at the end.
-
-# How is it decided where the tree is cut? This value 'H' can be set several ways, detailed under $run (and eventually turn me into a vignette)
-rm$run()
-rm$plot_maps(focalRegion = "Central America")
-rm$plot_maps(focalRegion = "Central America",curvature_matrix = "random") # Add curved joining lines (randomly generated)
-
-
-# Try different fixed cutoffs (a trial run with low iterations)
-rm$run(
-  iterations=100
-)
-rm$plot_h_optimisation()
-rm$plot_results_grid()
-rm$plot_clustercounts()
-
-rm$plot_maps(
-  run=6, #Smaller H emphasises uniqueness
-  width_max = 20.0,
-  alpha_max = 1.0, # Adjust alpha scale. Since this is a low-overlap dataset, it can make it easier to see small differences in the mounts of overlap
-  focalRegion = "Central America"
-)
-rm$plot_maps(
-  run=8, #Larger H emphasises overlap
-  width_max = 20.0,
-  alpha_max = 1.0,
-  focalRegion = "Central America"
-)
-
-##### Try with a selection of user-given random cutoffs
-rm$run(
-  iterations=500, # For random cutoffs we want a fair number of iterations, get a cup of tea
-  h_cutoff = seq(from=0.001,to=0.03,length.out=15),
-  h_cutoff_normal_sigma = rep(0.01,15) # Set the standard deviation for each cutoff tried
-)
-rm$plot_h_optimisation()
-rm$plot_results_grid()
-rm$plot_clustercounts()
-
-rm$plot_maps(
-  run=12, # Strikes a good balance I would say
-  width_max = 20.0,
-  alpha_max = 1.0,
-  focalRegion = "Central America"
-)
-
-#### Run using random-empirical cutoffs (not recommended except for very very weirdly structured datasets maybe, and maybe even then ReMIXTURE is not the tool for you)
-rm$run(
-  iterations=500, # For random cutoffs we want a fair number of iterations, get a cup of tea
-  h_cutoff="random-empirical"
-)
-
-rm$plot_maps(
-  width_max = 20.0,
-  alpha_max = 1.0,
-  focalRegion = "Central America"
-)
 
 ## ------------------------------------------------
 ## Method `ReMIXTURE$new`
@@ -170,7 +102,7 @@ rm$region_table
 
 \item{\code{region_table}}{Return the region table with lat/lon information.}
 
-\item{\code{run_results}}{Return the results of a run (performed with \verb{<ReMIXTURE_object>$run()})}
+\item{\code{run_results}}{Return the raw results of ReMIXTURE runs (runs must be first performed with \verb{<ReMIXTURE_object>$run()})}
 
 \item{\code{mds}}{Return the mds data (created when \verb{<ReMIXTURE_object>$plotMDS()} is run)}
 }
@@ -202,9 +134,9 @@ Create a new ReMIXTURE object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{distance_matrix}}{An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.}
+\item{\code{distance_matrix}}{\link{no default} An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.}
 
-\item{\code{region_table}}{A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.}
+\item{\code{region_table}}{\link{no default} A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.}
 }
 \if{html}{\out{</div>}}
 }
@@ -270,14 +202,14 @@ rm$region_table
 \if{html}{\out{<a id="method-ReMIXTURE-run"></a>}}
 \if{latex}{\out{\hypertarget{method-ReMIXTURE-run}{}}}
 \subsection{Method \code{run()}}{
-Run the ReMIXTURE algorithm and save the results in the object.
+Run the ReMIXTURE algorithm and save the results in the object. Multiple runs can be requested to aid parameter selection (see description for \code{H}), which is strongly recommended.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$run(
   iterations = 1000,
   subsample_proportions = c(0.8),
-  h_cutoff = "auto",
-  h_cutoff_normal_sigma = NULL,
-  h_cutoff_normal_truncRange = range(self$distance_matrix),
+  H = "auto",
+  H_truncNorm_sd = NULL,
+  H_truncNorm_range = upper_tri_ply(private$m, range),
   diagnosticPlotMDSclusters = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -287,25 +219,25 @@ Run the ReMIXTURE algorithm and save the results in the object.
 \describe{
 \item{\code{iterations}}{\link{1000} The number of times subsamples are drawn, clustered, and counted.}
 
-\item{\code{subsample_proportions}}{\link{0.8} size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
+\item{\code{subsample_proportions}}{\link{0.8} Size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
 \eqn{\text{subsample\_proportions} \times \text{\# of samples in region with the fewest samples}}
 (rounded to the nearest integer).}
 
-\item{\code{h_cutoff}}{\link{"auto"} Controls the clustering cutoff \eqn{H}. There are three modes possible:
+\item{\code{H}}{\link{"auto"} Controls the clustering cut heights \eqn{H} used in each run. There are three modes possible:
 \itemize{
-\item (Default) Random \eqn{H}, truncated normal distribution. Each iteration, \eqn{H} will be drawn from a normal distribution, truncated to the values given by \code{h_cutoff_normal_truncRange}. To use this option, you must provide the means of the distributions you want to try in \code{h_cutoff}, and the standard deviations (one for each mean) in \code{h_cutoff_normal_sigma}.
+\item (Default) Random \eqn{H}, truncated normal distributions. Each iteration, \eqn{H} will be drawn from a truncated normal distribution, truncated to the values given by \code{H_truncNorm_range}. To use this option, you must provide the means of the distributions you want to try in \code{H}, and the standard deviations (one corresponding to each mean) in \code{H_truncNorm_sd}.
 \itemize{
-\item If \code{h_cutoff="auto"} (the default), then a single normal distribution will be used, with the same mean and sd as the (non-self i.e. off-diagonal) distances in the distance matrix.
+\item If \code{H="auto"} (the default), then a selection of 16 normal distributions will be chosen based on a simple heuristic that typically captures some very good values. Briefly, the values of \code{H} fully span the interguartile ranges of inter-sample distances of each region, \code{H_truncNorm_sd} is half the standard deviation of inter-sample distances in the region with the smallest such value (i.e. it is given the same value in all 16 distributions), and \code{H_truncNorm_range} is just the range of all inter-sample distances in the whole dataset.
 }
-\item Fixed \eqn{H}. To use this option, provide a list of values to try as \eqn{H}. A run will be conducted with each, using the same value at each iteration. If you use this mode, you should clearly indicate it in any figure or publication, e.g. "ReMIXTURE plot using truncated random normal \eqn{H} (mean = ..., sd = ..., range=\link{...,...})".
-\item Random \eqn{H}, empirical distribution. This samples values of \eqn{H} from the distances in the distance matrix. This should probably never be used, because while it does help produce meaningful plots in cases of extremely structured populations, the results are just not very intuitive. If you use this mode, you should clearly indicate it in any figure or publication, e.g. "ReMIXTURE plot using empirically distributed \eqn{H}".
+\item Fixed \eqn{H}. To use this option, provide a list of values to try as \eqn{H}. A run will be conducted with each, using the same value at each iteration.
+\item Random \eqn{H}, empirical distribution. This samples values of \eqn{H} from the distances in the distance matrix. This should probably never be used, because while it does help produce meaningful plots in cases of extremely structured populations, the results are just not very intuitive. If you use this mode, you should clearly indicate it in any figure or publication, e.g. "ReMIXTURE plot using empirically distributed \eqn{H}". But just don't. This option will be removed.
 }}
 
-\item{\code{h_cutoff_normal_sigma}}{\link{NULL} See description for \code{h_cutoff}.}
+\item{\code{H_truncNorm_sd}}{\link{NULL} See description for \code{H}.}
 
-\item{\code{h_cutoff_normal_truncRange}}{\link{range(self$distance_matrix)} See description for \code{h_cutoff}.}
+\item{\code{H_truncNorm_range}}{\link{upper_tri_ply(private$m,range)} See description for \code{H}. By default it is set to the range of values in the distance matrix.}
 
-\item{\code{diagnosticPlotMDSclusters}}{\link{FALSE} A diagnostic tool. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.}
+\item{\code{diagnosticPlotMDSclusters}}{\link{FALSE} A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.}
 }
 \if{html}{\out{</div>}}
 }
@@ -327,12 +259,14 @@ NULL
 \subsection{Method \code{plot_results_grid()}}{
 Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per \code{plot_maps()}. If multiple runs were done, then the user must press \link{ENTER} to get the heatmaps for each run.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_results_grid(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_results_grid(runs = NULL, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{runs}}{\link{NULL} For which runs would you like a plot? An integer vector. By default, all runs.}
+
 \item{\code{...}}{Additional arguments ultimately passed to \code{base::plot()}}
 }
 \if{html}{\out{</div>}}
@@ -353,7 +287,7 @@ Nothing
 \if{html}{\out{<a id="method-ReMIXTURE-plot_clustercounts"></a>}}
 \if{latex}{\out{\hypertarget{method-ReMIXTURE-plot_clustercounts}{}}}
 \subsection{Method \code{plot_clustercounts()}}{
-Plot the cluster counts (ReMIXTURE's diversity metric) for each region in each run. This is useful for assessing how different values of \eqn{H} affect the output, in particular checking there aren't a lot of regions with very low cluster counts, which could be unreliable.
+Plot the cluster counts for each region in each run. This is useful for assessing how different values of \eqn{H} affect the output, in particular checking there aren't regions with very low cluster counts, or that they are not "maxxed out", either of which will probably give dodgy results unreliable.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_clustercounts()}\if{html}{\out{</div>}}
 }
@@ -415,24 +349,28 @@ Produces the canonical ReMIXTURE plots.
 \describe{
 \item{\code{run}}{\link{NULL} If multiple runs were done, choose which run to use. This is best assessed using \verb{<ReMIXTURE Object>$plot_h_optimisation()}, \verb{<ReMIXTURE Object>$plot_results_grid()}, and \verb{<ReMIXTURE Object>$plot_clustercounts()}.}
 
-\item{\code{focalRegion}}{\link{NULL} A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will eminate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of \verb{par(mfrow=c(<number of rows>,<number of columns>))}.}
+\item{\code{focalRegion}}{\link{NULL} A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of \verb{par(mfrow=c(<number of rows>,<number of columns>))}.}
 
-\item{\code{range_lon}}{\link{c(-179.0,179.0)} Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs.}
+\item{\code{range_lon}}{\link{c(-179.0,179.0)} Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.}
 
 \item{\code{range_lat}}{\link{c(-85.0,85.0)} Limit the map to some range of latitudes. Must be a vector of 2 numbers.}
 
-\item{\code{width_max}}{\link{10.0} The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.}
+\item{\code{width_max}}{\link{15.0} The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.}
 
 \item{\code{alpha_max}}{\link{1.0} As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.}
 
-\item{\code{diversityCirclesFocalOnly}}{\link{FALSE} Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions.}
+\item{\code{diversityCirclesFocalOnly}}{\link{FALSE} Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for \code{focalRegion}.}
 
-\item{\code{projection}}{\link{EckertIV} A function the performs projection of the map coordinates. Included in the package are \code{eckertIV}, \code{winkelIII}, and \code{equirectangular}. A custom function can be given, its first argument, named 'dtLL' should take a data.table with columns \code{lon} and \code{lat}. The second argument, named 'projColNames', should take a length-2 character vector. The output should be a data.table with columns containing the transformed longitude and latitude values. These columns should be named as per the entries in the input 'projColNames'.}
+\item{\code{projection}}{\link{EckertIV} A function the performs projection of the map coordinates. Included in the package are \code{eckertIV}, \code{winkelIII}, and \code{equirectangular}. A custom function can be given--see details.}
 
 \item{\code{curvature_matrix}}{\link{NULL} A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+A custom projection function should follow these rules: its first argument, named 'dtLL' should take a data.table with columns 'lon' and 'lat'. The second argument, named 'projColNames', should take a length-2 character vector. The output should be a data.table with columns containing the transformed longitude and latitude values. These columns should be named as per the entries in the input 'projColNames'.
+}
+
 \subsection{Returns}{
 Nothing
 }
@@ -449,17 +387,18 @@ Nothing
 \if{html}{\out{<a id="method-ReMIXTURE-plot_distance_densities"></a>}}
 \if{latex}{\out{\hypertarget{method-ReMIXTURE-plot_distance_densities}{}}}
 \subsection{Method \code{plot_distance_densities()}}{
-Plot inter-sample distances as a density plot over the distance matrix--basically, a convenient way to judge how far apart samples tend to be, and thus how the clustering might behave when various cutoff values (\eqn{H}) are used.
+Plot inter-sample distances as a density plot over the distance matrix--basically, a convenient way to judge how far apart samples tend to be, and thus how the clustering might behave when various H values (\eqn{H}) are used.
 
 Each plot tells the story from the perspective of a focal region. Each region is assigned a colour that remains constant across plots. A region's samples' distances to each other are marked with a thick line allowing you to see what colour is for what region.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_distance_densities(
   set_bw = 0.001,
-  set_xlims = range(private$m[upper.tri(private$m)]),
+  set_xlims = upper_tri_ply(private$m, range),
   samePlot = FALSE,
   H = NULL,
-  truncNorm_sd = NULL,
-  truncNorm_lims = NULL
+  H_truncNorm_sd = NULL,
+  H_truncNorm_lims = NULL,
+  HdistFromRun = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -472,11 +411,13 @@ Each plot tells the story from the perspective of a focal region. Each region is
 
 \item{\code{samePlot}}{\link{FALSE} If TRUE, it will put all the plots on one page.}
 
-\item{\code{H}}{\link{NULL} Visualise your values of \eqn{H} on the plot. If only this argument is used, a single line will indicate the cutoff.}
+\item{\code{H}}{\link{NULL} Visualise chosen values of (or distribution over) \eqn{H} on the plot. If only this argument is used, a single line will indicate that H value.}
 
-\item{\code{truncNorm_sd}}{\link{NULL} Visualise your values of \eqn{H} on the plot. If this argument is used, a truncated normal distribution will be shown.}
+\item{\code{H_truncNorm_sd}}{\link{NULL} Visualise a given distribution of \eqn{H} on the plot. If this argument is used (in conjunction with \code{H}), a truncated normal distribution will be shown. By default it will be truncated to the range of inter-sample distances in the distance matrix.}
 
-\item{\code{truncNorm_lims}}{\link{The range of the ReMIXTURE object's distance matrix} Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution.}
+\item{\code{H_truncNorm_lims}}{\link{The range of the ReMIXTURE object's distance matrix} Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution.}
+
+\item{\code{HdistFromRun}}{\link{NULL} Show the H distribution for a particular run. Obviously, this requires that a run has been done.}
 }
 \if{html}{\out{</div>}}
 }

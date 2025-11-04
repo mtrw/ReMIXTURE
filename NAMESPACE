@@ -3,6 +3,7 @@
 export(ReMIXTURE)
 export(eckertIV)
 export(equirectangular)
+export(upper_tri_ply)
 export(winkelIII)
 import(R6)
 import(data.table)

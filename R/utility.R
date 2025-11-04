@@ -334,6 +334,11 @@ get_upper_tri <- function(x,...){
   x[upper.tri(x,...)]
 }
 
+#' @export
+upper_tri_ply <- function(m,FUN,...){
+  FUN(m[upper.tri(m,...)],...)
+}
+
 ask <- function(q,YN = TRUE){
   if(YN){
     qn <-  paste0(q," [Y/N]: ")
@@ -376,7 +381,7 @@ rotateLon <- function(lon,deg,flipFlag=FALSE){
 rotateLat <- function(lat,deg){
   l <- lat+deg
   if(any(!l %between% c(-90,90))){
-    warning("After rotation, latitudes exceeded [-90,90]. These have been clamped to the range.")
+    #warning("After rotation, latitudes exceeded [-90,90]. These have been clamped to the range.")
     l <- clamp(l,-90,90)
   }
   l
@@ -714,8 +719,6 @@ plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("bo
   list(dt1,dt2) %>% invisible
 }
 
-
-
 rTruncNorm <- function(n = 1, mean = 0, sigma = 1, range = c(-Inf, Inf)) {
   runif(n, pnorm(range[1], mean, sigma), pnorm(range[2], mean, sigma)) %>%
     qnorm(mean, sigma)
@@ -729,36 +732,3 @@ drawUnitCircleTopRight <- function(x,y,border="#000000",col="#AA0000",xAdj=0.0,y
   c <- circle_seg(x+0.5+xAdj,y+0.5+yAdj,radius=scale/2,start_radians = 0.0,end_radians = 0.0)
   polygon(c[1,],c[2,],border=border,col=col,...)
 }
-
-#mat <- as.matrix(rm$run_results$runs[[1]]$overlap)
-heatmap <- function(mat,colPalette=colorRampPalette(c("#3333FFFF","#FFFFFFFF","#FF0000"))(400),NAcol="#BBBBBBFF",labelCex=0.6,...){
-  mat <- d <- as.matrix(mat)
-  n <- nrow(mat)
-  m <- ncol(mat)
-  d[,] <- colPalette[scale_between(mat,1,length(colPalette)) %>% round %>% as.vector()]
-  d[is.na(mat)] <- NAcol # not tested
-
-
-
-  null_plot(1:(n+1),1:(m+1),xaxt="n",yaxt="n",...)
-  axis(2,at=(1:n)+0.5,labels=rownames(d),las=2,cex.axis=labelCex)
-  axis(1,at=(1:n)+0.5,labels=colnames(d),las=3,cex.axis=labelCex)
-  for(i in 1:n){
-    for(j in 1:m){
-      drawUnitSquareTopRight(i,j,col=d[i,j])
-    }
-  }
-
-  heatLegend <- function(){
-    null_plot(0:1,1:(length(colPalette)+1),xaxt="n",yaxt="n")
-    for(j in 1:length(colPalette)){
-      drawUnitSquareTopRight(0,j,border=NA,col=colPalette[j])
-    }
-    axis(2,at=seq(0.5,(length(colPalette)+0.5),l=5),labels=seq(min(mat,na.rm=T),max(mat,na.rm=T),l=5) %>% round(digits = 2),las=2)
-  }
-  heatLegend
-}
-
-# l <- heatmap(mat)
-# l()
-
