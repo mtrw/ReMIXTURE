@@ -1,10 +1,6 @@
 
 ce <- function(...){   cat(paste0(...,"\n"), sep='', file=stderr()) %>% eval(envir = globalenv() ) %>% invisible() }
 
-wait <- function(message="Press [enter] to continue"){
-  invisible(readline(prompt=message))
-}
-
 argGiven <- function(x){
   !is.null(x)
 }
@@ -36,7 +32,7 @@ diffLat <- function(range_lat){
 }
 
 clampNearestLon <- function(lon,range_lon,sideFlag=FALSE){
-  f <- abs(diffLon(lon,range_lon[1]))<abs(diffLon(lon,range_lon[2]))
+  f <- abs(diffLonRight(c(lon,range_lon[1])))<abs(diffLonRight(c(lon,range_lon[2])))
   c <- fifelse(f,range_lon[1],range_lon[2])
   if(sideFlag==TRUE){
     return(list(lon=c,sideFlag=f))
@@ -112,13 +108,13 @@ round2dp <- function(x){
 alpha <- function(colChain,setAlpha=1L){
   parseColChain(colChain,setAlpha) %>%
     t %>%
-    apply( 1 , function(r) {rgb(r[1],r[2],r[3],r[4])} )
+    apply( 1 , function(r) {grDevices::rgb(r[1],r[2],r[3],r[4])} )
 }
 
 # From BioDT
 parseColChain <- function(colChain,setAlpha=NULL){
   # Parse and wrangle chain to rgb
-  chain <- col2rgb(colChain,a=T)/255
+  chain <- grDevices::col2rgb(colChain,a=T)/255
 
   # Set alpha as requested
   if(argGiven(setAlpha)){
@@ -126,10 +122,9 @@ parseColChain <- function(colChain,setAlpha=NULL){
     chain[4,] <- if( length(setAlpha)==1 | length(setAlpha)==length(colChain) ){
       setAlpha
     } else {
-      approx((1:length(setAlpha)) %scale_between% c(1,length(colChain)),setAlpha,1:length(colChain))$y
+      stats::approx((1:length(setAlpha)) %>% scale_between(1,length(colChain)),setAlpha,1:length(colChain))$y
     }
   }
-
   return(chain)
 }
 
@@ -324,9 +319,9 @@ nu <-function(x){
 
 pd <- function(x,add=F,...){
   if(!add){
-    x %>% density(na.rm=TRUE,...) %>% plot(main=NA)
+    x %>% stats::density(na.rm=TRUE,...) %>% plot(main=NA)
   } else {
-    x %>% density(na.rm=TRUE,...) %>% lines(main=NA)
+    x %>% stats::density(na.rm=TRUE,...) %>% graphics::lines(main=NA)
   }
 }
 
@@ -334,6 +329,14 @@ get_upper_tri <- function(x,...){
   x[upper.tri(x,...)]
 }
 
+#' Apply a function FUN to a vector made from the entries in the upper triangle of the matrix of m.
+#'
+#' @param m \[no default\] A matrix.
+#' @param FUN \[no default\] The function to apply.
+#' @param ... Extra arguments passed to FUN( ... )
+#'
+#' @return The output as described
+#'
 #' @export
 upper_tri_ply <- function(m,FUN,...){
   FUN(m[upper.tri(m,...)],...)
@@ -414,7 +417,7 @@ rotateLatLonDtLL <- function(dtLL,lon_deg,lat_deg,splitPlotGrps=TRUE,rotatedColn
         replacer <- .SD[rep(1,3)]
         clampLon1 <- sign(lon)*180
         clampLon2 <- -clampLon1
-        intLat <- approx(rotateLon(c(lon,nextLon),-lon),c(lat,nextLat),clampLon1-lon)$y
+        intLat <- stats::approx(rotateLon(c(lon,nextLon),-lon),c(lat,nextLat),clampLon1-lon)$y
         replacer[2:3,]$lon <- c(clampLon1,clampLon2)
         replacer[2:3,]$lat <- intLat
         replacer[3,]$lon_flipped <- replacer[3,!lon_flipped]
@@ -585,6 +588,7 @@ winkelIII <- function(dtLL,projColNames=c("x_W3","y_W3")){
 #' One of ReMIXTURE's three inbuilt map projection functions, the Eckert IV. See (https://en.wikipedia.org/wiki/Eckert_IV_projection)
 #'
 #' @param dtLL A data.table with at minimum two numerical columns, one named 'lat' and the other 'lon', containing latitude and longitude points (in degrees) to be transformed.
+#' @param precision The precision with which the projected values are calculated (the calculation is numerical using Newton's Method).
 #' @param projColNames A length-2 character vector. In the returned data.table, what should the transformed columns be named?
 #'
 #' @export
@@ -678,7 +682,7 @@ truncateLatLonDtLL <- function(dtLL,range_lon,range_lat,updatePlotgrp=TRUE,plotG
 }
 
 
-plotMapItem <- function(dtLL,range_lon=NULL,range_lat=NULL,projFun=equirectangular,plotFun=lines,splitPlotGrps=TRUE,...){
+plotMapItem <- function(dtLL,range_lon=NULL,range_lat=NULL,projFun=equirectangular,plotFun=graphics::lines,splitPlotGrps=TRUE,...){
   centre_lonLat <- if(is.null(range_lon) & is.null(range_lat)){
     c(0.0,0.0)
   } else {
@@ -704,7 +708,7 @@ plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("bo
     }
     dt2 %<>% fillPathDtLL
     for( pg in unique(dt2$plotGrp) ){
-      polygon( dt2[plotGrp==pg]$x, dt2[plotGrp==pg]$y, col=maskCol , border = NA )
+      graphics::polygon( dt2[plotGrp==pg]$x, dt2[plotGrp==pg]$y, col=maskCol , border = NA )
     }
   }
 
@@ -712,23 +716,18 @@ plotMapBorder <- function(range_lon,range_lat,projFun=equirectangular,type=c("bo
     dt1 <- makeBorder(range_lon,range_lat) %>% fillPathDtLL %>% projFun(projColNames=c("x","y"))
     dt1[,ptIdx:=1:.N,by=.(plotGrp)]
     for( pg in unique(dt1$plotGrp) ){
-      lines( dt1[plotGrp==pg]$x, dt1[plotGrp==pg]$y, ... )
+      graphics::lines( dt1[plotGrp==pg]$x, dt1[plotGrp==pg]$y, ... )
     }
   }
 
   list(dt1,dt2) %>% invisible
 }
 
-rTruncNorm <- function(n = 1, mean = 0, sigma = 1, range = c(-Inf, Inf)) {
-  runif(n, pnorm(range[1], mean, sigma), pnorm(range[2], mean, sigma)) %>%
-    qnorm(mean, sigma)
-}
-
 drawUnitSquareTopRight <- function(x,y,border="#000000",col="#AA0000",xAdj=0.0,yAdj=0.0,scale=1.0,...){
-  rect(x+xAdj,y+yAdj,x+xAdj+scale,y+yAdj+scale,border=border,col=col,...)
+  graphics::rect(x+xAdj,y+yAdj,x+xAdj+scale,y+yAdj+scale,border=border,col=col,...)
 }
 
 drawUnitCircleTopRight <- function(x,y,border="#000000",col="#AA0000",xAdj=0.0,yAdj=0.0,scale=1.0,n = 180,...){
   c <- circle_seg(x+0.5+xAdj,y+0.5+yAdj,radius=scale/2,start_radians = 0.0,end_radians = 0.0)
-  polygon(c[1,],c[2,],border=border,col=col,...)
+  graphics::polygon(c[1,],c[2,],border=border,col=col,...)
 }

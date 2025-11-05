@@ -9,6 +9,8 @@ eckertIV(dtLL, precision = 0.001, projColNames = c("x_EIV", "y_EIV"))
 \arguments{
 \item{dtLL}{A data.table with at minimum two numerical columns, one named 'lat' and the other 'lon', containing latitude and longitude points (in degrees) to be transformed.}
 
+\item{precision}{The precision with which the projected values are calculated (the calculation is numerical using Newton's Method).}
+
 \item{projColNames}{A length-2 character vector. In the returned data.table, what should the transformed columns be named?}
 }
 \description{

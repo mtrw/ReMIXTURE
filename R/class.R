@@ -12,6 +12,98 @@
 #'
 #' For a short lesson on how to run ReMIXTURE, follow the tutorial in the examples section below.
 #'
+#' @examples
+#' #### A SHORT TUTORIAL ####
+#' library(ReMIXTURE)
+#'
+#' # Create ReMIXTURE analysis object from an included dataset (Tripodi & Rabanus-Wallace et al. 2021. PNAS).
+#' rm <- ReMIXTURE$new(
+#'   distance_matrix = ReMIXTURE_example_distance_matrix,
+#'   region_table = ReMIXTURE_example_region_table
+#' )
+#'
+#' # An MDS plot is a quick way to get a feel for the structure of the data.
+#' rm$plot_MDS()
+#' #
+#' # A run involves taking a subsample of all the samples in the distance matrix, such that every region has the same number of samples included. This subsample is hierarchically clustered (imagine creating a dendrogram and cutting it at a certain height). Clusters are then counted. The number of clusters in which a region appears is a proxy for that region's total genetic diversity. The number of clusters in which *only* one region appears is a proxy for the diversity unique to that region. The number of clusters in which members of a pair of clusters appears is a proxy for the diversity that is overlapping between those two regions. the concept is similar to the way a Venn diagram might work. This is done `iterations` times, and all these various counts are averaged at the end.
+#' #
+#' # How is it decided how high the tree is cut? The details are in `?ReMIXTURE` under '$run'.
+#' # Ideally, a collection of parameter settings are chosen and the results assessed to choose a good one. By default, the run function tries to choose a good selection of values, and it does a good job.
+#' rm$run(iterations = 25) # Iterations set low as we will be doing several runs and comparing results, so we can sacrifice a little accuracy for now.
+#'
+#' # For in an intuitive look at how the diversity metric changes with the parameter settings, view them simply as a grid, for each run (press <enter> to get through them). Notice how with low H values, unique diversity is over-emphasised and overlapping diversity is under-emphasised
+#' rm$plot_results_grid()
+#'
+#' # A good balance can be found by summing region-unique/-overlapping clusters. At some point they are expected to cross over.
+#' rm$plot_h_optimisation()
+#'
+#' # Note also that the number of multi-region clusters reaches a maximum, when the H is big enough to produce many such clusters, but before the clustersbecome so large that the total cluster number decline enough to drag this number down.
+#' # H values between the crossover point and the multi-region maximum are usually good for showing a balanced representation. I prefer the crossover point, here about run 4.
+#' # Some more diagnosis can be done, but for now let's produce our remixture maps!
+#' # BEWARE: What we are doing is great for a demo but before you publish you should be sure to do the rest of this tutorial.
+#' rm$plot_maps(run = 4, focalRegion = "Africa")
+#'   # Let's make those diversity visualisation bigger and get some curved lines ...
+#' set.seed(42.42)
+#' rm$plot_maps(
+#'   run=4,
+#'   focalRegion = "Africa",
+#'   width_max = 30,
+#'   curvature_matrix = "random"
+#' )
+#'   # Let's crop the map and try another projection ...
+#' rm$plot_maps(
+#'   run=4,
+#'   focalRegion = "Africa",
+#'   width_max = 30,
+#'   curvature_matrix = "random",
+#'   range_lon = c(-120,140),
+#'   range_lat = c(-30,60),
+#'   projection = equirectangular
+#' )
+#'   # Finally let's do this as a plot with all maps using the standard R layout options. I will also show each region's diversity metrics only when it is the focal region, using `diversityCirclesFocalOnly = TRUE`.
+#' par(mfrow=c(4,4),mar=c(0.2,0.2,1,0.2))
+#' rm$plot_maps(
+#'   run=4,
+#'   #focalRegion = "Africa", # without this argument, will sequentially plot maps for all focal regions
+#'   width_max = 30,
+#'   curvature_matrix = "random",
+#'   range_lon = c(-120,140),
+#'   range_lat = c(-30,60),
+#'   projection = equirectangular,
+#'   diversityCirclesFocalOnly = TRUE
+#' )
+#' # clear plots and reset parameters
+#' dev.off()
+#'
+#' #### More functions and details ####
+#'
+#' # Extract info from the object
+#' rm$distance_matrix[1:10,1:10] # get back the distance matrix
+#' rm$region_table # get back the region table
+#' rm$mds # get back the mds data
+#'
+#' # Diagnostic tools -- the distribution of distances between/within different regions, and how they relate to the distribution of H
+#' rm$plot_distance_densities(HdistFromRun=4) # will plot all sequentially including H distribution as used in run 4
+#' rm$plot_distance_densities( # overlay a hypothetical H distribution of your choosing
+#'   H = 0.01,
+#'   H_truncNorm_sd = 0.02,
+#'   H_truncNorm_lims = c(.005,.02)
+#' )
+#' rm$plot_distance_densities( # as above, but with a constant H
+#'   H = 0.01
+#' )
+#
+#' # We can plot MDS plots as we perform a run, and draw hulls surrounding the clusters. This is great for giving an impression of how the subsampling level looks and whether there are any peculiarities interfering with the clustering steps.
+#' # Note for this run we have chosen a constant H, as shown in the last plot
+#' # Once you have seen enough iterations, hit 'f' to finish the run without plotting.
+#' rm$run(
+#'   iterations = 100,
+#'   H = 0.01,
+#'   diagnosticPlotMDSclusters = TRUE
+#' )
+#'
+#' # That's it!
+#'
 #' @export
 ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
@@ -36,13 +128,13 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         stop("Region position table must include columns named \"lon\", \"lat\", and \"region\".")
       }
       #check types of cols
-      if(!(class(in_rt$lon) == "numeric" | class(in_rt$lon) == "integer") ){
+      if(!(is.numeric(in_rt$lon) | is.integer(in_rt$lon))){
         stop("Column `lon` must contain numeric or integer values.")
       }
-      if(!(class(in_rt$lat) == "numeric" | class(in_rt$lat) == "integer") ){
+      if(!(is.numeric(in_rt$lat) | is.integer(in_rt$lat))){
         stop("Column `lat` must contain numeric or integer values.")
       }
-      if(!(class(in_rt$region) == "character") ){
+      if(!(is.character(in_rt$region))){
         stop("Column `region` must be a character vector.")
       }
       if( !all(unique(colnames(private$dm)) %in% in_rt$region) ){
@@ -128,6 +220,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' Return the raw results of ReMIXTURE runs (runs must be first performed with `<ReMIXTURE_object>$run()`)
     #'
     #' @examples
+    #' # Using build-in ReMIXTURE test datasets
     #' rm <- ReMIXTURE$new(
     #'   distance_matrix = ReMIXTURE_example_distance_matrix,
     #'   region_table = ReMIXTURE_example_region_table
@@ -145,11 +238,12 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' Return the mds data (created when `<ReMIXTURE_object>$plotMDS()` is run)
     #'
     #' @examples
+    #' # Using build-in ReMIXTURE test datasets
     #' rm <- ReMIXTURE$new(
     #'   distance_matrix = ReMIXTURE_example_distance_matrix,
     #'   region_table = ReMIXTURE_example_region_table
     #' )
-    #' rm$plotMDS() # Default settings
+    #' rm$plot_MDS() # Default settings
     #' rm$mds
     mds=function(){
       if(is.null(private$mdsPlot)){
@@ -167,8 +261,8 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
     #' @description
     #' Create a new ReMIXTURE object.
-    #' @param distance_matrix [no default] An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.
-    #' @param region_table [no default] A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.
+    #' @param distance_matrix \[no default\] An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.
+    #' @param region_table \[no default\] A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.
     #' @return A new ReMIXTURE object.
     #' @examples
     #' # Using build-in ReMIXTURE test datasets
@@ -232,23 +326,23 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @description
     #' Run the ReMIXTURE algorithm and save the results in the object. Multiple runs can be requested to aid parameter selection (see description for `H`), which is strongly recommended.
     #'
-    #' @param iterations [1000] The number of times subsamples are drawn, clustered, and counted.
-    #' @param subsample_proportions [0.8] Size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
+    #' @param iterations \[1000\] The number of times subsamples are drawn, clustered, and counted.
+    #' @param subsample_proportions \[0.8\] Size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
     #'   \eqn{\text{subsample\_proportions} \times \text{\# of samples in region with the fewest samples}}
     #' (rounded to the nearest integer).
-    #' @param H ["auto"] Controls the clustering cut heights \eqn{H} used in each run. There are three modes possible:
+    #' @param H \["auto"\] Controls the clustering cut heights \eqn{H} used in each run. There are three modes possible:
     #' - (Default) Random \eqn{H}, truncated normal distributions. Each iteration, \eqn{H} will be drawn from a truncated normal distribution, truncated to the values given by `H_truncNorm_range`. To use this option, you must provide the means of the distributions you want to try in `H`, and the standard deviations (one corresponding to each mean) in `H_truncNorm_sd`.
     #'   - If `H="auto"` (the default), then a selection of 16 normal distributions will be chosen based on a simple heuristic that typically captures some very good values. Briefly, the values of `H` fully span the interguartile ranges of inter-sample distances of each region, `H_truncNorm_sd` is half the standard deviation of inter-sample distances in the region with the smallest such value (i.e. it is given the same value in all 16 distributions), and `H_truncNorm_range` is just the range of all inter-sample distances in the whole dataset.
     #' - Fixed \eqn{H}. To use this option, provide a list of values to try as \eqn{H}. A run will be conducted with each, using the same value at each iteration.
     #' - Random \eqn{H}, empirical distribution. This samples values of \eqn{H} from the distances in the distance matrix. This should probably never be used, because while it does help produce meaningful plots in cases of extremely structured populations, the results are just not very intuitive. If you use this mode, you should clearly indicate it in any figure or publication, e.g. "ReMIXTURE plot using empirically distributed \eqn{H}". But just don't. This option will be removed.
-    #' @param H_truncNorm_sd [NULL] See description for `H`.
-    #' @param H_truncNorm_range [upper_tri_ply(private$m,range)] See description for `H`. By default it is set to the range of values in the distance matrix.
-    #' @param diagnosticPlotMDSclusters [FALSE] A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.
+    #' @param H_truncNorm_sd \[NULL\] See description for `H`.
+    #' @param H_truncNorm_range \[upper_tri_ply(private$m,range)\] See description for `H`. By default it is set to the range of values in the distance matrix.
+    #' @param diagnosticPlotMDSclusters \[FALSE\] A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.
     #'
     #' @return NULL
     #'
     #' @examples
-    #' # See ?ReMIXTURE
+    #' # See examples section of ?ReMIXTURE
     run = function(
       iterations=1000,
       subsample_proportions=c(0.8),
@@ -260,6 +354,11 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       ce("------------------------------------------------")
       ce("Running ReMixture analysis ...")
       ce("------------------------------------------------\n")
+
+      if( diagnosticPlotMDSclusters==TRUE & interactive()==FALSE ){
+        ce("Diagnostic MDS clustering plots are only available in interactive sessions--disabling this feature.")
+        diagnosticPlotMDSclusters <- FALSE
+      }
 
       ce("\tResetting results fields and flags")
       private$results <- list()
@@ -422,7 +521,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
 
             # Diagnostic plots if requested
-            if(diagnosticPlotMDSclusters==TRUE & skipPlotUntil==it)
+            if( diagnosticPlotMDSclusters==TRUE & skipPlotUntil==it)
             {
               plot(
                 private$mdsPlot$mds[ss_selector,]$axisA,
@@ -525,9 +624,9 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #### PLOTTING ####
 
     #' @description
-    #' Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per `plot_maps()`. If multiple runs were done, then the user must press [ENTER] to get the heatmaps for each run.
+    #' Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per `plot_maps()`.
     #'
-    #' @param runs [NULL] For which runs would you like a plot? An integer vector. By default, all runs.
+    #' @param runs \[NULL\] For which runs would you like a plot? An integer vector. By default, all runs.
     #' @param ... Additional arguments ultimately passed to `base::plot()`
     #'
     #' @return Nothing
@@ -538,20 +637,20 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
       }
-      if(is.null(runs)){ runs <- 1:length(private$results$runs) }
+      if(is.null(runs)){
+        ce("Plotting a results grids for all runs.")
+        runs <- 1:length(private$results)
+      }
       for(i in runs){
-        #i=1
-        ssp <- private$results$runs[[i]]$subsample_proportion
-        hc <- private$results$runs[[i]]$H
-        hcsd <- private$results$runs[[i]]$H_truncNorm_sd
-        its <- private$results$runs[[i]]$iterations
+        ssp <- private$results[[i]]$subsample_proportion
+        hc <- private$results[[i]]$H
+        hcsd <- private$results[[i]]$H_truncNorm_sd
+        its <- private$results[[i]]$iterations
 
-        if(length(private$results$runs)>1){
-          wait(paste0("Press any key to plot results grid for run ",i,":\n\tSubsample proportion: ",ssp,"\n\tH mean: ",round(hc,digits = 2),"\n\tH sd:",hcsd,"\n\tIterations:",its))
-        }
+        ce(paste0("Plotting run ",i,":\n\tSubsample proportion: ",ssp,"\n\tH mean: ",round(hc,digits = 2),"\n\tH sd:",hcsd,"\n\tIterations:",its,"\n------------------------------\n"))
 
-        td <- private$results$runs[[i]]$diversity
-        ol_ud <- private$results$runs[[i]]$overlap
+        td <- private$results[[i]]$diversity
+        ol_ud <- private$results[[i]]$overlap
         maxDiv <- max(c(td,ol_ud))
         tdScale <- td/maxDiv
         ol_udScale <- ol_ud/maxDiv
@@ -589,11 +688,11 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         stop("Analysis has not been run. Perform using `$run()`")
       }
 
-      pd <- setDT(ldply(1:length(private$results$runs),function(i){
+      pd <- setDT(ldply(1:length(private$results),function(i){
         data.table(
           run=i,
-          region=private$results$runs[[i]]$overlap %>% rownames,
-          cluster_count=private$results$runs[[i]]$diversity
+          region=private$results[[i]]$overlap %>% rownames,
+          cluster_count=private$results[[i]]$diversity
         )
       }))
 
@@ -622,7 +721,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
       }
-      d <- setDT(ldply(private$results$runs,function(r){
+      d <- setDT(ldply(private$results,function(r){
         data.table(
           subsample_proportion = r$subsample_proportion,
           H = r$H,
@@ -647,15 +746,16 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @description
     #' Produces the canonical ReMIXTURE plots.
     #'
-    #' @param run [NULL] If multiple runs were done, choose which run to use. This is best assessed using `<ReMIXTURE Object>$plot_h_optimisation()`, `<ReMIXTURE Object>$plot_results_grid()`, and `<ReMIXTURE Object>$plot_clustercounts()`.
-    #' @param focalRegion [NULL] A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of `par(mfrow=c(<number of rows>,<number of columns>))`.
-    #' @param range_lon [c(-179.0,179.0)] Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.
-    #' @param range_lat [c(-85.0,85.0)] Limit the map to some range of latitudes. Must be a vector of 2 numbers.
-    #' @param width_max [15.0] The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.
-    #' @param alpha_max [1.0] As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.
-    #' @param diversityCirclesFocalOnly [FALSE] Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for `focalRegion`.
-    #' @param projection [EckertIV] A function the performs projection of the map coordinates. Included in the package are `eckertIV`, `winkelIII`, and `equirectangular`. A custom function can be given--see details.
-    #' @param curvature_matrix [NULL] A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.
+    #' @param run \[NULL\] If multiple runs were done, choose which run to use. This is best assessed using `<ReMIXTURE Object>$plot_h_optimisation()`, `<ReMIXTURE Object>$plot_results_grid()`, and `<ReMIXTURE Object>$plot_clustercounts()`.
+    #' @param focalRegion \[NULL\] A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of `par(mfrow=c(<number of rows>,<number of columns>))`.
+    #' @param range_lon \[c(-179.0,179.0)\] Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.
+    #' @param range_lat \[c(-85.0,85.0)\] Limit the map to some range of latitudes. Must be a vector of 2 numbers.
+    #' @param width_max \[15.0\] The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.
+    #' @param alpha_max \[1.0\] As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.
+    #' @param diversityCirclesFocalOnly \[FALSE\] Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for `focalRegion`.
+    #' @param projection \[EckertIV\] A function the performs projection of the map coordinates. Included in the package are `eckertIV`, `winkelIII`, and `equirectangular`. A custom function can be given--see details.
+    #' @param curvature_matrix \[NULL\] A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.
+    #' @param mapData \[mapData110\] The polygon data from which the map is made. For higher resolution, use mapData10. See e.g. ?mapData110.
     #'
     #' @details
     #' A custom projection function should follow these rules: its first argument, named 'dtLL' should take a data.table with columns 'lon' and 'lat'. The second argument, named 'projColNames', should take a length-2 character vector. The output should be a data.table with columns containing the transformed longitude and latitude values. These columns should be named as per the entries in the input 'projColNames'.
@@ -674,25 +774,26 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       alpha_max=1.0,
       diversityCirclesFocalOnly=FALSE,
       projection=eckertIV,
-      curvature_matrix=NULL
+      curvature_matrix=NULL,
+      mapData=mapData110
     ){
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
       }
-      if(is.null(run) & length(private$results$runs)>1){
+      if(is.null(run) & length(private$results)>1){
         stop("Please provide a run number to plot from (consider using `<ReMIXTURE Object>$plot_h_optimisation()`, `<ReMIXTURE Object>$plot_results_grid()`, and `<ReMIXTURE Object>$plot_clustercounts()` to assess which run parameters are appropriate).")
       }
-      if(is.null(run) & length(private$results$runs)==1){
+      if(is.null(run) & length(private$results)==1){
         run <- 1
       }
 
-      st <- private$results$runs[[run]]$overlap
+      st <- private$results[[run]]$overlap
       rt <- data.table(
         region=colnames(st),
-        totDiv=private$results$runs[[run]]$diversity
+        totDiv=private$results[[run]]$diversity
       )
 
-      rt[,uniqueDiv:=private$results$runs[[run]]$overlap[r,r],by=.(r=region)] # could just pull out diagonal but this seems safer
+      rt[,uniqueDiv:=private$results[[run]]$overlap[r,r],by=.(r=region)] # could just pull out diagonal but this seems safer
       rt <- private$rt[rt,on=.(region)]
       maxDiv <- max(rt$totDiv)
       rt[,wTotDiv   := totDiv/maxDiv    * width_max]
@@ -728,7 +829,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         pe <- plotEmptyMap( range_lon, range_lat, projFun=projection )
         #plotMapItem( makeBorder() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
         plotMapItem( makeMapDataLatLonLines() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
-        plotMapItem( mapData110               , range_lon , range_lat, projFun=projection , plotFun=polygon, col="#f7bf25" , lwd=0.2 )
+        plotMapItem( mapData                  , range_lon , range_lat, projFun=projection , plotFun=polygon, col="#f7bf25" , lwd=0.2 )
         plotMapBorder(                          range_lon , range_lat, projFun=projection , plotEdges=pe ,lwd=4 )
 
         for(j in 1:nrow(trt)){
@@ -761,15 +862,16 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #'
     #' Each plot tells the story from the perspective of a focal region. Each region is assigned a colour that remains constant across plots. A region's samples' distances to each other are marked with a thick line allowing you to see what colour is for what region.
     #'
-    #' @param set_bw [NULL] The bandwidth parameter 'bw' passed to `density()`. By default it will be set automatically.
-    #' @param set_xlims [NULL] Limits on the x-axis. Default is set by `density()`.
-    #' @param samePlot [FALSE] If TRUE, it will put all the plots on one page.
-    #' @param H [NULL] Visualise chosen values of (or distribution over) \eqn{H} on the plot. If only this argument is used, a single line will indicate that H value.
-    #' @param H_truncNorm_sd [NULL] Visualise a given distribution of \eqn{H} on the plot. If this argument is used (in conjunction with `H`), a truncated normal distribution will be shown. By default it will be truncated to the range of inter-sample distances in the distance matrix.
-    #' @param H_truncNorm_lims [The range of the ReMIXTURE object's distance matrix] Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution.
-    #' @param HdistFromRun [NULL] Show the H distribution for a particular run. Obviously, this requires that a run has been done.
+    #' @param set_bw \[NULL\] The bandwidth parameter 'bw' passed to `density()`. By default it will be set automatically.
+    #' @param set_xlims \[NULL\] Limits on the x-axis. Default is set by `density()`.
+    #' @param samePlot \[FALSE\] If TRUE, it will put all the plots on one page.
+    #' @param H \[NULL\] Visualise chosen values of (or distribution over) \eqn{H} on the plot. If only this argument is used, a single line will indicate that H value.
+    #' @param H_truncNorm_sd \[NULL\] Visualise a given distribution of \eqn{H} on the plot. If this argument is used (in conjunction with `H`), a truncated normal distribution will be shown.
+    #' @param H_truncNorm_lims \[upper_tri_ply(private$m,range)\] Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution. By default it will be the range of inter-sample distances in the distance matrix.
+    #' @param HdistFromRun \[NULL\] Show the H distribution for a particular run. Obviously, this requires that a run has been done.
+    #' @param plotLegend \[FALSE\] If true, the last plot produced will be the colour legend.
     #'
-    #' @return Nothing
+    #' @return Invisibly returns a data.table giving the legend colours.
     #'
     #' @examples
     #' # See ?ReMIXTURE
@@ -780,7 +882,8 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       H=NULL,
       H_truncNorm_sd=NULL,
       H_truncNorm_lims=NULL,
-      HdistFromRun=NULL
+      HdistFromRun=NULL,
+      plotLegend=FALSE
     ){
 
       if(!is.null(HdistFromRun)){
@@ -858,14 +961,14 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         par( mfrow=c(1,1) )
       }
 
-      wait("Press any key to plot legend")
-
-      null_plot(0:2,0:nrow(colTable),xaxt="n",yaxt="n")
-      for(i in nrow(colTable):1){
-        rect(0,i-1,1,i,col=colTable[i]$col)
-        text(x=1.0,y=i-0.5,label=colTable[i]$region2,pos=4,cex=0.8)
+      if(plotLegend==TRUE){
+        null_plot(0:2,0:nrow(colTable),xaxt="n",yaxt="n")
+        for(i in nrow(colTable):1){
+          rect(0,i-1,1,i,col=colTable[i]$col)
+          text(x=1.0,y=i-0.5,label=colTable[i]$region2,pos=4,cex=0.8)
+        }
       }
-
+      invisible(return(colTable))
     },
     #' @description
     #' An MDS plot showing relationships among samples
@@ -874,15 +977,15 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #'
     #' These can take a very long time if the number of samples is high. In these cases, I suggest taking a smaller sample of the whole dataset.
     #'
-    #' @param axes [c(1,2)] A vector of the MDS axes that should be outputted.
-    #' @param colPalette [c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88")] A vector collection of colours that will be interpolated and applied to the different
-    #' @param showLegend [TRUE] Add a legend?
-    #' @param doPlot [TRUE] Produce a plot? If not, will still return the data for the MDS.
-    #' @param pch [20] The shape of the points. See `?points`.
-    #' @param cex [0.8] The size of the points. See `?points`.
+    #' @param axes \[c(1,2)\] A vector of the MDS axes that should be outputted.
+    #' @param colPalette \[c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88")\] A vector collection of colours that will be interpolated and applied to the different
+    #' @param showLegend \[TRUE\] Add a legend?
+    #' @param doPlot \[TRUE\] Produce a plot? If not, will still return the data for the MDS.
+    #' @param pch \[20\] The shape of the points. See `?points`.
+    #' @param cex \[0.8\] The size of the points. See `?points`.
     #' @param ... Other arguments passed to `plot()`.
     #'
-    #' @return Silently returns a 2-list containing the (1) results of the MDS in a data.table and (2) information about the legend (another data.table).
+    #' @return Invisibly returns a 2-list containing the (1) results of the MDS in a data.table and (2) information about the legend (another data.table).
     #'
     #' @examples
     #' # See ?ReMixture

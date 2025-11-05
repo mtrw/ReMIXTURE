@@ -10,7 +10,7 @@ Upper triangle and lower triangle are identical.
 It is possible to populate one of the triangles with zeroes
 }
 \source{
-{Rabanus-Wallace & Tripodi et al. (2021) }
+{ Rabanus-Wallace & Tripodi et al. (2021) }
 }
 \usage{
 ReMIXTURE_example_distance_matrix

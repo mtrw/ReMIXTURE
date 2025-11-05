@@ -13,7 +13,7 @@ A data table object with 11 rows and 3 variables:
 }
 }
 \source{
-{Rabanus-Wallace & Tripodi et al. (2021) }
+{ Rabanus-Wallace & Tripodi et al. (2021) }
 }
 \usage{
 ReMIXTURE_example_region_table

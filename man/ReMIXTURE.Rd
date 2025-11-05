@@ -16,6 +16,96 @@ This is the first release version of the package, and development is ongoing.
 For a short lesson on how to run ReMIXTURE, follow the tutorial in the examples section below.
 }
 \examples{
+#### A SHORT TUTORIAL ####
+library(ReMIXTURE)
+
+# Create ReMIXTURE analysis object from an included dataset (Tripodi & Rabanus-Wallace et al. 2021. PNAS).
+rm <- ReMIXTURE$new(
+  distance_matrix = ReMIXTURE_example_distance_matrix,
+  region_table = ReMIXTURE_example_region_table
+)
+
+# An MDS plot is a quick way to get a feel for the structure of the data.
+rm$plot_MDS()
+#
+# A run involves taking a subsample of all the samples in the distance matrix, such that every region has the same number of samples included. This subsample is hierarchically clustered (imagine creating a dendrogram and cutting it at a certain height). Clusters are then counted. The number of clusters in which a region appears is a proxy for that region's total genetic diversity. The number of clusters in which *only* one region appears is a proxy for the diversity unique to that region. The number of clusters in which members of a pair of clusters appears is a proxy for the diversity that is overlapping between those two regions. the concept is similar to the way a Venn diagram might work. This is done `iterations` times, and all these various counts are averaged at the end.
+#
+# How is it decided how high the tree is cut? The details are in `?ReMIXTURE` under '$run'.
+# Ideally, a collection of parameter settings are chosen and the results assessed to choose a good one. By default, the run function tries to choose a good selection of values, and it does a good job.
+rm$run(iterations = 25) # Iterations set low as we will be doing several runs and comparing results, so we can sacrifice a little accuracy for now.
+
+# For in an intuitive look at how the diversity metric changes with the parameter settings, view them simply as a grid, for each run (press <enter> to get through them). Notice how with low H values, unique diversity is over-emphasised and overlapping diversity is under-emphasised
+rm$plot_results_grid()
+
+# A good balance can be found by summing region-unique/-overlapping clusters. At some point they are expected to cross over.
+rm$plot_h_optimisation()
+
+# Note also that the number of multi-region clusters reaches a maximum, when the H is big enough to produce many such clusters, but before the clustersbecome so large that the total cluster number decline enough to drag this number down.
+# H values between the crossover point and the multi-region maximum are usually good for showing a balanced representation. I prefer the crossover point, here about run 4.
+# Some more diagnosis can be done, but for now let's produce our remixture maps!
+# BEWARE: What we are doing is great for a demo but before you publish you should be sure to do the rest of this tutorial.
+rm$plot_maps(run = 4, focalRegion = "Africa")
+  # Let's make those diversity visualisation bigger and get some curved lines ...
+set.seed(42.42)
+rm$plot_maps(
+  run=4,
+  focalRegion = "Africa",
+  width_max = 30,
+  curvature_matrix = "random"
+)
+  # Let's crop the map and try another projection ...
+rm$plot_maps(
+  run=4,
+  focalRegion = "Africa",
+  width_max = 30,
+  curvature_matrix = "random",
+  range_lon = c(-120,140),
+  range_lat = c(-30,60),
+  projection = equirectangular
+)
+  # Finally let's do this as a plot with all maps using the standard R layout options. I will also show each region's diversity metrics only when it is the focal region, using `diversityCirclesFocalOnly = TRUE`.
+par(mfrow=c(4,4),mar=c(0.2,0.2,1,0.2))
+rm$plot_maps(
+  run=4,
+  #focalRegion = "Africa", # without this argument, will sequentially plot maps for all focal regions
+  width_max = 30,
+  curvature_matrix = "random",
+  range_lon = c(-120,140),
+  range_lat = c(-30,60),
+  projection = equirectangular,
+  diversityCirclesFocalOnly = TRUE
+)
+# clear plots and reset parameters
+dev.off()
+
+#### More functions and details ####
+
+# Extract info from the object
+rm$distance_matrix[1:10,1:10] # get back the distance matrix
+rm$region_table # get back the region table
+rm$mds # get back the mds data
+
+# Diagnostic tools -- the distribution of distances between/within different regions, and how they relate to the distribution of H
+rm$plot_distance_densities(HdistFromRun=4) # will plot all sequentially including H distribution as used in run 4
+rm$plot_distance_densities( # overlay a hypothetical H distribution of your choosing
+  H = 0.01,
+  H_truncNorm_sd = 0.02,
+  H_truncNorm_lims = c(.005,.02)
+)
+rm$plot_distance_densities( # as above, but with a constant H
+  H = 0.01
+)
+# We can plot MDS plots as we perform a run, and draw hulls surrounding the clusters. This is great for giving an impression of how the subsampling level looks and whether there are any peculiarities interfering with the clustering steps.
+# Note for this run we have chosen a constant H, as shown in the last plot
+# Once you have seen enough iterations, hit 'f' to finish the run without plotting.
+rm$run(
+  iterations = 100,
+  H = 0.01,
+  diagnosticPlotMDSclusters = TRUE
+)
+
+# That's it!
+
 
 ## ------------------------------------------------
 ## Method `ReMIXTURE$new`
@@ -33,17 +123,19 @@ rm <- ReMIXTURE$new(
 )
 rm$region_table
 rm$distance_matrix[1:10,1:10]
+# Using build-in ReMIXTURE test datasets
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
   region_table = ReMIXTURE_example_region_table
 )
 rm$run() # Default run settings
 rm$run_results
+# Using build-in ReMIXTURE test datasets
 rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
   region_table = ReMIXTURE_example_region_table
 )
-rm$plotMDS() # Default settings
+rm$plot_MDS() # Default settings
 rm$mds
 # Using build-in ReMIXTURE test datasets
 rm <- ReMIXTURE$new(
@@ -57,7 +149,7 @@ rm$region_table
 ## Method `ReMIXTURE$run`
 ## ------------------------------------------------
 
-# See ?ReMIXTURE
+# See examples section of ?ReMIXTURE
 
 ## ------------------------------------------------
 ## Method `ReMIXTURE$plot_results_grid`
@@ -134,9 +226,9 @@ Create a new ReMIXTURE object.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{distance_matrix}}{\link{no default} An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.}
+\item{\code{distance_matrix}}{[no default] An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.}
 
-\item{\code{region_table}}{\link{no default} A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.}
+\item{\code{region_table}}{[no default] A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.}
 }
 \if{html}{\out{</div>}}
 }
@@ -165,7 +257,8 @@ rm$distance_matrix[1:10,1:10]
 \if{html}{\out{</div>}}
 
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{rm <- ReMIXTURE$new(
+\preformatted{# Using build-in ReMIXTURE test datasets
+rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
   region_table = ReMIXTURE_example_region_table
 )
@@ -175,11 +268,12 @@ rm$run_results
 \if{html}{\out{</div>}}
 
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{rm <- ReMIXTURE$new(
+\preformatted{# Using build-in ReMIXTURE test datasets
+rm <- ReMIXTURE$new(
   distance_matrix = ReMIXTURE_example_distance_matrix,
   region_table = ReMIXTURE_example_region_table
 )
-rm$plotMDS() # Default settings
+rm$plot_MDS() # Default settings
 rm$mds
 }
 \if{html}{\out{</div>}}
@@ -217,13 +311,13 @@ Run the ReMIXTURE algorithm and save the results in the object. Multiple runs ca
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{iterations}}{\link{1000} The number of times subsamples are drawn, clustered, and counted.}
+\item{\code{iterations}}{[1000] The number of times subsamples are drawn, clustered, and counted.}
 
-\item{\code{subsample_proportions}}{\link{0.8} Size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
+\item{\code{subsample_proportions}}{[0.8] Size of subsample to draw each iteration. An equal number of samples will be selected from each region, the number being
 \eqn{\text{subsample\_proportions} \times \text{\# of samples in region with the fewest samples}}
 (rounded to the nearest integer).}
 
-\item{\code{H}}{\link{"auto"} Controls the clustering cut heights \eqn{H} used in each run. There are three modes possible:
+\item{\code{H}}{["auto"] Controls the clustering cut heights \eqn{H} used in each run. There are three modes possible:
 \itemize{
 \item (Default) Random \eqn{H}, truncated normal distributions. Each iteration, \eqn{H} will be drawn from a truncated normal distribution, truncated to the values given by \code{H_truncNorm_range}. To use this option, you must provide the means of the distributions you want to try in \code{H}, and the standard deviations (one corresponding to each mean) in \code{H_truncNorm_sd}.
 \itemize{
@@ -233,11 +327,11 @@ Run the ReMIXTURE algorithm and save the results in the object. Multiple runs ca
 \item Random \eqn{H}, empirical distribution. This samples values of \eqn{H} from the distances in the distance matrix. This should probably never be used, because while it does help produce meaningful plots in cases of extremely structured populations, the results are just not very intuitive. If you use this mode, you should clearly indicate it in any figure or publication, e.g. "ReMIXTURE plot using empirically distributed \eqn{H}". But just don't. This option will be removed.
 }}
 
-\item{\code{H_truncNorm_sd}}{\link{NULL} See description for \code{H}.}
+\item{\code{H_truncNorm_sd}}{[NULL] See description for \code{H}.}
 
-\item{\code{H_truncNorm_range}}{\link{upper_tri_ply(private$m,range)} See description for \code{H}. By default it is set to the range of values in the distance matrix.}
+\item{\code{H_truncNorm_range}}{[upper_tri_ply(private$m,range)] See description for \code{H}. By default it is set to the range of values in the distance matrix.}
 
-\item{\code{diagnosticPlotMDSclusters}}{\link{FALSE} A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.}
+\item{\code{diagnosticPlotMDSclusters}}{[FALSE] A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.}
 }
 \if{html}{\out{</div>}}
 }
@@ -246,7 +340,7 @@ NULL
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{# See ?ReMIXTURE
+\preformatted{# See examples section of ?ReMIXTURE
 }
 \if{html}{\out{</div>}}
 
@@ -257,7 +351,7 @@ NULL
 \if{html}{\out{<a id="method-ReMIXTURE-plot_results_grid"></a>}}
 \if{latex}{\out{\hypertarget{method-ReMIXTURE-plot_results_grid}{}}}
 \subsection{Method \code{plot_results_grid()}}{
-Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per \code{plot_maps()}. If multiple runs were done, then the user must press \link{ENTER} to get the heatmaps for each run.
+Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in something like a heatmap format but using the circle-area conventions as per \code{plot_maps()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ReMIXTURE$plot_results_grid(runs = NULL, ...)}\if{html}{\out{</div>}}
 }
@@ -265,7 +359,7 @@ Plot the unique and overlapped diversity recorded in a ReMIXTURE run, in somethi
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{runs}}{\link{NULL} For which runs would you like a plot? An integer vector. By default, all runs.}
+\item{\code{runs}}{[NULL] For which runs would you like a plot? An integer vector. By default, all runs.}
 
 \item{\code{...}}{Additional arguments ultimately passed to \code{base::plot()}}
 }
@@ -340,30 +434,33 @@ Produces the canonical ReMIXTURE plots.
   alpha_max = 1,
   diversityCirclesFocalOnly = FALSE,
   projection = eckertIV,
-  curvature_matrix = NULL
+  curvature_matrix = NULL,
+  mapData = mapData110
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{run}}{\link{NULL} If multiple runs were done, choose which run to use. This is best assessed using \verb{<ReMIXTURE Object>$plot_h_optimisation()}, \verb{<ReMIXTURE Object>$plot_results_grid()}, and \verb{<ReMIXTURE Object>$plot_clustercounts()}.}
+\item{\code{run}}{[NULL] If multiple runs were done, choose which run to use. This is best assessed using \verb{<ReMIXTURE Object>$plot_h_optimisation()}, \verb{<ReMIXTURE Object>$plot_results_grid()}, and \verb{<ReMIXTURE Object>$plot_clustercounts()}.}
 
-\item{\code{focalRegion}}{\link{NULL} A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of \verb{par(mfrow=c(<number of rows>,<number of columns>))}.}
+\item{\code{focalRegion}}{[NULL] A character string naming one of the regions as it occurs in the region table, chosen as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of \verb{par(mfrow=c(<number of rows>,<number of columns>))}.}
 
-\item{\code{range_lon}}{\link{c(-179.0,179.0)} Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.}
+\item{\code{range_lon}}{[c(-179.0,179.0)] Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.}
 
-\item{\code{range_lat}}{\link{c(-85.0,85.0)} Limit the map to some range of latitudes. Must be a vector of 2 numbers.}
+\item{\code{range_lat}}{[c(-85.0,85.0)] Limit the map to some range of latitudes. Must be a vector of 2 numbers.}
 
-\item{\code{width_max}}{\link{15.0} The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.}
+\item{\code{width_max}}{[15.0] The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.}
 
-\item{\code{alpha_max}}{\link{1.0} As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.}
+\item{\code{alpha_max}}{[1.0] As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.}
 
-\item{\code{diversityCirclesFocalOnly}}{\link{FALSE} Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for \code{focalRegion}.}
+\item{\code{diversityCirclesFocalOnly}}{[FALSE] Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for \code{focalRegion}.}
 
-\item{\code{projection}}{\link{EckertIV} A function the performs projection of the map coordinates. Included in the package are \code{eckertIV}, \code{winkelIII}, and \code{equirectangular}. A custom function can be given--see details.}
+\item{\code{projection}}{[EckertIV] A function the performs projection of the map coordinates. Included in the package are \code{eckertIV}, \code{winkelIII}, and \code{equirectangular}. A custom function can be given--see details.}
 
-\item{\code{curvature_matrix}}{\link{NULL} A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.}
+\item{\code{curvature_matrix}}{[NULL] A matrix describing how the lines emanating from the focal region should bend. The (i,j)th entry gives the bend angle (in radians) of the line beginning at region i and ending at region j (indexed as per the order in the region table). In practice this is pretty tedious to enter manually. The argument "random" will auto-generate a matrix filled with entries ~ normal(0,0.3), which usually works well.}
+
+\item{\code{mapData}}{[mapData110] The polygon data from which the map is made. For higher resolution, use mapData10. See e.g. ?mapData110.}
 }
 \if{html}{\out{</div>}}
 }
@@ -398,31 +495,34 @@ Each plot tells the story from the perspective of a focal region. Each region is
   H = NULL,
   H_truncNorm_sd = NULL,
   H_truncNorm_lims = NULL,
-  HdistFromRun = NULL
+  HdistFromRun = NULL,
+  plotLegend = FALSE
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{set_bw}}{\link{NULL} The bandwidth parameter 'bw' passed to \code{density()}. By default it will be set automatically.}
+\item{\code{set_bw}}{[NULL] The bandwidth parameter 'bw' passed to \code{density()}. By default it will be set automatically.}
 
-\item{\code{set_xlims}}{\link{NULL} Limits on the x-axis. Default is set by \code{density()}.}
+\item{\code{set_xlims}}{[NULL] Limits on the x-axis. Default is set by \code{density()}.}
 
-\item{\code{samePlot}}{\link{FALSE} If TRUE, it will put all the plots on one page.}
+\item{\code{samePlot}}{[FALSE] If TRUE, it will put all the plots on one page.}
 
-\item{\code{H}}{\link{NULL} Visualise chosen values of (or distribution over) \eqn{H} on the plot. If only this argument is used, a single line will indicate that H value.}
+\item{\code{H}}{[NULL] Visualise chosen values of (or distribution over) \eqn{H} on the plot. If only this argument is used, a single line will indicate that H value.}
 
-\item{\code{H_truncNorm_sd}}{\link{NULL} Visualise a given distribution of \eqn{H} on the plot. If this argument is used (in conjunction with \code{H}), a truncated normal distribution will be shown. By default it will be truncated to the range of inter-sample distances in the distance matrix.}
+\item{\code{H_truncNorm_sd}}{[NULL] Visualise a given distribution of \eqn{H} on the plot. If this argument is used (in conjunction with \code{H}), a truncated normal distribution will be shown.}
 
-\item{\code{H_truncNorm_lims}}{\link{The range of the ReMIXTURE object's distance matrix} Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution.}
+\item{\code{H_truncNorm_lims}}{[upper_tri_ply(private$m,range)] Visualise your values of \eqn{H} on the plot. If this argument is used, it will set the truncation limits of the normal distribution. By default it will be the range of inter-sample distances in the distance matrix.}
 
-\item{\code{HdistFromRun}}{\link{NULL} Show the H distribution for a particular run. Obviously, this requires that a run has been done.}
+\item{\code{HdistFromRun}}{[NULL] Show the H distribution for a particular run. Obviously, this requires that a run has been done.}
+
+\item{\code{plotLegend}}{[FALSE] If true, the last plot produced will be the colour legend.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Nothing
+Invisibly returns a data.table giving the legend colours.
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
@@ -457,24 +557,24 @@ These can take a very long time if the number of samples is high. In these cases
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{axes}}{\link{c(1,2)} A vector of the MDS axes that should be outputted.}
+\item{\code{axes}}{[c(1,2)] A vector of the MDS axes that should be outputted.}
 
-\item{\code{colPalette}}{\link{c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88")} A vector collection of colours that will be interpolated and applied to the different}
+\item{\code{colPalette}}{[c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88")] A vector collection of colours that will be interpolated and applied to the different}
 
-\item{\code{showLegend}}{\link{TRUE} Add a legend?}
+\item{\code{showLegend}}{[TRUE] Add a legend?}
 
-\item{\code{doPlot}}{\link{TRUE} Produce a plot? If not, will still return the data for the MDS.}
+\item{\code{doPlot}}{[TRUE] Produce a plot? If not, will still return the data for the MDS.}
 
-\item{\code{pch}}{\link{20} The shape of the points. See \code{?points}.}
+\item{\code{pch}}{[20] The shape of the points. See \code{?points}.}
 
-\item{\code{cex}}{\link{0.8} The size of the points. See \code{?points}.}
+\item{\code{cex}}{[0.8] The size of the points. See \code{?points}.}
 
 \item{\code{...}}{Other arguments passed to \code{plot()}.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Silently returns a 2-list containing the (1) results of the MDS in a data.table and (2) information about the legend (another data.table).
+Invisibly returns a 2-list containing the (1) results of the MDS in a data.table and (2) information about the legend (another data.table).
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
