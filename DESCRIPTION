@@ -6,7 +6,7 @@ Authors@R:
 Maintainer: M Timothy Rabanus-Wallace <mtrw85@gmail.com>
 Description: 
     Implementation of the ReMIXTURE method to quantify how (genetic or other) diversity is distributed and shared between groups, and to create pretty and intuitive plots showing this on a globe. An earlier version of this method is described in Tripodi & Rabanus-Wallace, et al.,2021 (10.1073/pnas.2104315118), this newer version differs significantly.
-License: MIT + file LICENSE
+License: GPL-3.0 license
 Encoding: UTF-8
 LazyData: true
 LazyDataCompression: bzip2
