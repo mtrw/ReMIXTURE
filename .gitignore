@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-playground.R
 inst/doc
 /doc/
 /Meta/
 ms/
+dev.r

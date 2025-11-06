@@ -1,20 +1,26 @@
 #' ReMIXTURE
 #'
 #' @description
-#' ReMIXTURE is a tool for visualising genetic (or any) diversity across space.
+#' ReMIXTURE is a tool for visualising how genetic (or any) diversity in a population is distributed and shared between groups. Its canonical purpose is to describe the genetic diversity among individuals allocated to different geographic regions.
 #'
-#' It produces intuitive (and pretty!) plots that show the diversity in different geographic regions, and how it is shared between regions.
-#' These plots are based on ReMIXTURE's diversity metric, which is designed to be maximally intuitive. Basically the plots are designed work like Venn diagrams: Diversity in a group is partitioned into diversity that is unique to that group, and that which overlaps other groups--and this is quantified for every focal--target group pair.
+#' It produces intuitive (and [pretty](https://github.com/mtrw/ReMIXTURE/blob/main/README.md)!) plots.
+#' These plots are based on ReMIXTURE's diversity metric, which is designed to be maximally intuitive. They work like Venn diagrams: Diversity in a group is partitioned into diversity that is unique to that group, and that which is overlapped by the diversity in other groups.
 #'
-#' ReMIXTURE is designed for data where many samples exist from many (or ... at least a few) locations. It requires just a distance matrix describing the difference between every sample pair, and a table describing where on Earth each sample is located (latitude and longitude).
+#' ReMIXTURE will work on any dataset giving the pairwise distances between a collection of samples (say, at least 10?) from each of some collection of regions (or groups, more broadly). It requires just a pairwise distance matrix (which can provide any metric you choose, such as IBS distances for genetic data), and a table describing where on Earth each region/group is located (latitude and longitude), which is used for plotting only.
 #'
-#' This is the first release version of the package, and development is ongoing.
-#'
-#' For a short lesson on how to run ReMIXTURE, follow the tutorial in the examples section below.
+#' ## *GETTING STARTED?*
+#' Scroll down and follow the short tutorial in the *examples* section.
 #'
 #' @examples
+#'
+#' ####################################
 #' #### A SHORT TUTORIAL ####
+#' ####################################
+#'
+#' # Load the library
 #' library(ReMIXTURE)
+#'
+#' # ReMIXTURE is written using the [R6](https://r6.r-lib.org/index.html) Object Orientated Programming system. You can read more about OOP from the great Hadley Wickham [here](https://adv-r.hadley.nz/oo.html) or about R6 specifically [here](https://adv-r.hadley.nz/r6.html).
 #'
 #' # Create ReMIXTURE analysis object from an included dataset (Tripodi & Rabanus-Wallace et al. 2021. PNAS).
 #' rm <- ReMIXTURE$new(
@@ -34,6 +40,12 @@
 #' # For in an intuitive look at how the diversity metric changes with the parameter settings, view them simply as a grid, for each run (press <enter> to get through them). Notice how with low H values, unique diversity is over-emphasised and overlapping diversity is under-emphasised
 #' rm$plot_results_grid()
 #'
+#' # - Circle sizes represent the diversity within a region (diagonals) or overlapped between regions (off-diagonals)
+#' # - The white inner circle represents the diversity unique to the focal region. The black outer band therefore represents the amount of diversity in the focal region that is overlapped by diversity found in other regions.
+#'
+#' # Comparing the results between runs should make it clear why a ReMIXTURE analysis on one data set can not be straightforwardly compared. Certainly, any parameter settings will reliably give an indication of which regions are more or less diverse, which have more unique diversity, and which overlap more. But by altering the distribution of H, we can emphasise different features more or less.
+#' # To create completely comparable analyses, therefore, you will need to ensure both datasets
+#'
 #' # A good balance can be found by summing region-unique/-overlapping clusters. At some point they are expected to cross over.
 #' rm$plot_h_optimisation()
 #'
@@ -42,7 +54,10 @@
 #' # Some more diagnosis can be done, but for now let's produce our remixture maps!
 #' # BEWARE: What we are doing is great for a demo but before you publish you should be sure to do the rest of this tutorial.
 #' rm$plot_maps(run = 4, focalRegion = "Africa")
-#'   # Let's make those diversity visualisation bigger and get some curved lines ...
+#'
+#' # Note the overlapped diversity is now shown by the width/alpha of a line joining the focal region to each other region.
+#'
+#' # Let's make those diversity visualisations bigger on the plot and get some curved lines ...
 #' set.seed(42.42)
 #' rm$plot_maps(
 #'   run=4,
@@ -50,7 +65,8 @@
 #'   width_max = 30,
 #'   curvature_matrix = "random"
 #' )
-#'   # Let's crop the map and try another projection ...
+#'
+#' # Let's crop the map and try another projection ...
 #' rm$plot_maps(
 #'   run=4,
 #'   focalRegion = "Africa",
@@ -75,7 +91,9 @@
 #' # clear plots and reset parameters
 #' dev.off()
 #'
+#' ####################################
 #' #### More functions and details ####
+#' ####################################
 #'
 #' # Extract info from the object
 #' rm$distance_matrix[1:10,1:10] # get back the distance matrix
@@ -92,7 +110,7 @@
 #' rm$plot_distance_densities( # as above, but with a constant H
 #'   H = 0.01
 #' )
-#
+#'
 #' # We can plot MDS plots as we perform a run, and draw hulls surrounding the clusters. This is great for giving an impression of how the subsampling level looks and whether there are any peculiarities interfering with the clustering steps.
 #' # Note for this run we have chosen a constant H, as shown in the last plot
 #' # Once you have seen enough iterations, hit 'f' to finish the run without plotting.
@@ -102,7 +120,8 @@
 #'   diagnosticPlotMDSclusters = TRUE
 #' )
 #'
-#' # That's it!
+#' # That's essentially all the package's functionality, though there are some more details in the documentation for the specific methods.
+#'
 #'
 #' @export
 ReMIXTURE <- R6::R6Class("ReMIXTURE",
@@ -186,14 +205,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
   active = list(
 
     #' @field distance_matrix
-    #' Return the distance matrix.
-    #' @examples
-    #' rm <- ReMIXTURE$new(
-    #'   distance_matrix = ReMIXTURE_example_distance_matrix,
-    #'   region_table = ReMIXTURE_example_region_table
-    #' )
-    #' rm$distance_matrix[1:10,1:10]
-    #' rm$region_table
+    #' Return a copy of the distance matrix.
     distance_matrix=function(){
       out_dm <- copy(private$m)
       diag(out_dm) <- 0.0
@@ -202,15 +214,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
 
     #' @field region_table
-    #' Return the region table with lat/lon information.
-    #'
-    #' @examples
-    #' rm <- ReMIXTURE$new(
-    #'   distance_matrix = ReMIXTURE_example_distance_matrix,
-    #'   region_table = ReMIXTURE_example_region_table
-    #' )
-    #' rm$region_table
-    #' rm$distance_matrix[1:10,1:10]
+    #' Return a copy of the region table with lat/lon information.
     region_table=function(){
       rt <- copy(private$rt)
       return(rt)
@@ -218,15 +222,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
     #' @field run_results
     #' Return the raw results of ReMIXTURE runs (runs must be first performed with `<ReMIXTURE_object>$run()`)
-    #'
-    #' @examples
-    #' # Using build-in ReMIXTURE test datasets
-    #' rm <- ReMIXTURE$new(
-    #'   distance_matrix = ReMIXTURE_example_distance_matrix,
-    #'   region_table = ReMIXTURE_example_region_table
-    #' )
-    #' rm$run() # Default run settings
-    #' rm$run_results
     run_results=function(){
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
@@ -236,15 +231,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
 
     #' @field mds
     #' Return the mds data (created when `<ReMIXTURE_object>$plotMDS()` is run)
-    #'
-    #' @examples
-    #' # Using build-in ReMIXTURE test datasets
-    #' rm <- ReMIXTURE$new(
-    #'   distance_matrix = ReMIXTURE_example_distance_matrix,
-    #'   region_table = ReMIXTURE_example_region_table
-    #' )
-    #' rm$plot_MDS() # Default settings
-    #' rm$mds
     mds=function(){
       if(is.null(private$mdsPlot)){
         stop("MDS has not been produced. Make it using e.g. `<ReMIXTURE_object>$plotMDS()`")
@@ -264,14 +250,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @param distance_matrix \[no default\] An all-vs-all, full numeric distance matrix, with rownames and colnames giving the region of origin of the corresponding individual.
     #' @param region_table \[no default\] A data.table describing the longitudes/latitudes of each region, with columns named "region" (character), and "lon" and "lat" (numeric or integer). The "region" column must have names corresponding to all the row/column names of the distance matrix.
     #' @return A new ReMIXTURE object.
-    #' @examples
-    #' # Using build-in ReMIXTURE test datasets
-    #' rm <- ReMIXTURE$new(
-    #'   distance_matrix = ReMIXTURE_example_distance_matrix,
-    #'   region_table = ReMIXTURE_example_region_table
-    #' )
-    #' rm$distance_matrix[1:10,1:10]
-    #' rm$region_table
     initialize = function(distance_matrix,region_table){
 
 
@@ -339,10 +317,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @param H_truncNorm_range \[upper_tri_ply(private$m,range)\] See description for `H`. By default it is set to the range of values in the distance matrix.
     #' @param diagnosticPlotMDSclusters \[FALSE\] A very useful diagnostic tool, especially for weirdly-structured datasets. If true, at each iteration, will draw the subsampled samples on an MDS plot, and draw hulls around the clusters.
     #'
-    #' @return NULL
-    #'
-    #' @examples
-    #' # See examples section of ?ReMIXTURE
+    #' @return Nothing
     run = function(
       iterations=1000,
       subsample_proportions=c(0.8),
@@ -630,9 +605,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @param ... Additional arguments ultimately passed to `base::plot()`
     #'
     #' @return Nothing
-    #'
-    #' @examples
-    #' # See ?ReMIXTURE
     plot_results_grid = function( runs=NULL ,...){
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
@@ -680,9 +652,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' Plot the cluster counts for each region in each run. This is useful for assessing how different values of \eqn{H} affect the output, in particular checking there aren't regions with very low cluster counts, or that they are not "maxxed out", either of which will probably give dodgy results unreliable.
     #'
     #' @return Nothing
-    #'
-    #' @examples
-    #' # See ?ReMIXTURE
     plot_clustercounts = function(){
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
@@ -714,9 +683,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' These counts are excellent for determining a good value for \eqn{H}, in cases where the default choice is not desirable. A good value typically gives a nice balance of multi- and single-region clusters, typically between where the two values cross over and (as occurs in most datasets) a point where the number of multi-region clusters hits some maximum.
     #'
     #' @return Nothing
-    #'
-    #' @examples
-    #' # See ?ReMIXTURE
     plot_h_optimisation = function(){
       if(private$runflag==FALSE){
         stop("Analysis has not been run. Perform using `$run()`")
@@ -762,9 +728,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #'
     #'
     #' @return Nothing
-    #'
-    #' @examples
-    #' # See ?ReMIXTURE
     plot_maps = function(
       run=NULL,
       focalRegion=NULL,
@@ -872,9 +835,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @param plotLegend \[FALSE\] If true, the last plot produced will be the colour legend.
     #'
     #' @return Invisibly returns a data.table giving the legend colours.
-    #'
-    #' @examples
-    #' # See ?ReMIXTURE
     plot_distance_densities = function(
       set_bw=0.001,
       set_xlims=upper_tri_ply(private$m,range),
@@ -986,9 +946,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' @param ... Other arguments passed to `plot()`.
     #'
     #' @return Invisibly returns a 2-list containing the (1) results of the MDS in a data.table and (2) information about the legend (another data.table).
-    #'
-    #' @examples
-    #' # See ?ReMixture
     plot_MDS = function(
       axes=c(1L,2L),
       colPalette=c("#DD000088","#DDDD0088","#00DD0088","#0000DD88","#DD00DD88"),
