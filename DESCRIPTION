@@ -3,8 +3,9 @@ Title: ReMIXTURE
 Version: 0.1.0
 Authors@R: 
     person("M Timothy", "Rabanus-Wallace", , "mtrw85@gmail.com", role = c("aut", "cre"))
+Maintainer: M Timothy Rabanus-Wallace <mtrw85@gmail.com>
 Description: 
-    Implementation of the ReMIXTURE method to quantify how (genetic or other) diversity is distributed and shared between groups, and to create pretty and intuitive plots showing this on a globe. An earlier version of this method is described in Rabanus-Wallace & Tripodi et al. (2021), this newer version differs significantly.
+    Implementation of the ReMIXTURE method to quantify how (genetic or other) diversity is distributed and shared between groups, and to create pretty and intuitive plots showing this on a globe. An earlier version of this method is described in Tripodi & Rabanus-Wallace, et al.,2021 (10.1073/pnas.2104315118), this newer version differs significantly.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
