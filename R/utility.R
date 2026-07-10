@@ -65,7 +65,7 @@ scale_between <- function(x,lower,upper){
 }
 # 1:10 %>% scale_between(-100,1)
 
-wrapValsRange <- function(x,lower,upper){ # CANNOT be used for both lat and long, long always goes upwards as we circle, lat bounces between up wards and downwards
+wrapValsRange <- function(x,lower,upper){ # CANNOT be used for both lat and long, long always goes upwards as we circle, lat bounces between upwards and downwards
   #browser()
   keepSame <- (x==lower) | (x==upper)
   rangeLength <- upper-lower

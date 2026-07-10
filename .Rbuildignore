@@ -4,3 +4,5 @@
 ms/.*
 dev.R
 images
+^doc$
+^Meta$
