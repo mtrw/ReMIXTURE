@@ -23,7 +23,7 @@
 #' rm$plot_MDS()
 #'
 #' # A collection of 16 test runs with automatically-selected parameters
-#' rm$run(iterations = 25)
+#' rm$run(iterations = 5)
 #'
 #' rm$plot_h_optimisation()
 #'
@@ -39,12 +39,13 @@
 #'   H_truncNorm_sd=params$H_truncNorm_sd
 #' )
 #'
+#' #undebug(rm$plot_maps)
 #' rm$plot_maps(
 #'   # implicit: run=1 (since only 1 run is available)
 #'   focalRegion = "Africa"
 #' )
 #'
-#' # Explore some plot options
+#'  Explore some plot options
 #' rm$plot_maps(
 #'   focalRegion = "Africa",
 #'   width_max = 30, # Adjust point/line widths
@@ -61,10 +62,10 @@
 #'   projection = equirectangular,             # Set map projection. Also try `winkelIII` or `eckertIV` (default)
 #'   diversityCirclesFocalOnly = TRUE          # Omit diversity circles for all regions except the focal region of the subplot
 #' )
-#' #dev.off() # to reset plot parameters
+#' dev.off() # to reset plot parameters!
 #'
 #' rm$plot_maps(
-#'   focalRegion = "all", # All overlap lines on one map ... sometimes great, mostly too busy.
+#'   allOnOneMap = TRUE, # All overlap lines on one map ... sometimes great, mostly too busy.
 #'   width_max = 20,
 #'   curvature = c(0.1,0.75),
 #'   range_lat = c(-20,90),
@@ -73,7 +74,7 @@
 #'
 #' # Extract info from the object
 #' rm$get_run_parameters() # With multiple runs, a list will be returned
-#' rm$distance_matrix[1:10,1:10] # the distance matrix
+#' rm$distance_matrix[1:5,1:5] %>% round(digits=3) # the distance matrix
 #' rm$region_table # the region table
 #' rm$mds # the mds data (only if $plot_MDS() has been run)
 #'
@@ -912,16 +913,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         )
       }))
 
-      l_ply(private$rt$region,function(r){
-
-        pd[region==r,plot(run,cluster_count)]
-        for(r2 in pd[region==r]$region){
-          r2 <- "Asia East"
-          lines(x=pd[region==r]$run,y=private$results[[i]]$overlap[r2,],col=pd[run==i]$colRun,lwd=.4)
-        }
-      })
-
-
       setkey(pd,run,region)
       pd[,xIdx:=1:.N,by=run]
       pd[,colRun:=rgb(run/length(private$results),0.0,0.0)]
@@ -977,14 +968,13 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
     #' Produces the canonical ReMIXTURE plots.
     #'
     #' @param run \[NULL\] If multiple runs were done, choose which run to use. This is best assessed using `<ReMIXTURE Object>$plot_h_optimisation()`, `<ReMIXTURE Object>$plot_results_grid()`, and `<ReMIXTURE Object>$plot_clustercounts()`.
-    #' @param focalRegion \[NULL\] Either:
-    #' * A character vector naming regions to plot as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of `par(mfrow=c(<number of rows>,<number of columns>))`. By default, all regions will be plotted sequentially.
-    #' * "all". This will plot all overlaps and regions on the same map. This is usually far too busy to be very useful.
+    #' @param focalRegion \[NULL\] A character vector naming regions to plot as the focal region (from which lines showing inter-region overlap will emanate). If left NULL then a map will be plotted with each region as the focus in turn--this is best used after setting up a multi-panel plot with some variant of `par(mfrow=c(<number of rows>,<number of columns>))`. By default, all regions will be plotted sequentially.
     #' @param range_lon \[c(-179.0,179.0)\] Limit the map to some range of longitudes. Must be a vector of 2 numbers. For awkward reasons, using 180 or -180 can cause graphical bugs and I am deeply sorry.
     #' @param range_lat \[c(-85.0,85.0)\] Limit the map to some range of latitudes. Must be a vector of 2 numbers.
     #' @param width_max \[15.0\] The maximum width of the circles/lines, in units of lat/lons. This width will correspond to the highest cluster count and the others will be scaled such that zero clusters <=> zero width.
     #' @param alpha_max \[1.0\] As per width_max but controlling the alpha of connecting lines. Setting to NULL will disable alpha and make all lines solid. Can be set above 1.0, with weird results--probably don't do this.
     #' @param diversityCirclesFocalOnly \[FALSE\] Plot the circle representing a region's total/unique/shared diversity at only the focal region. Otherwise, all plots will show the diversities at all regions. This is good when you have multiple plots on the page, see description for `focalRegion`.
+    #' @param allOnOneMap \[FALSE\] If TRUE, plot all regional diversity circles and overlap lines on the same map. This is usually far too busy to be very good, but can be good for datasets with not too many regions.
     #' @param projection \[EckertIV\] A function the performs projection of the map coordinates. Included in the package are `eckertIV`, `winkelIII`, and `equirectangular`. A custom function can be given--see details.
     #' @param curvature \[NULL\] Describes how the lines emanating from the focal region should bend to aid visualisation.
     #' One of the following options:
@@ -1007,6 +997,7 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       width_max=10.0,
       alpha_max=1.0,
       diversityCirclesFocalOnly=FALSE,
+      allOnOneMap = FALSE,
       projection=eckertIV,
       curvature=NULL,
       mapData=mapData110
@@ -1019,6 +1010,9 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
       }
       if(is.null(run) & length(private$results)==1){
         run <- 1
+      }
+      if(!is.null(focalRegion) && any(!focalRegion %in% private$rt$region)){
+        stop("Entries given to `focalRegion` must be in the region table")
       }
 
       st <- private$results[[run]]$overlap
@@ -1077,19 +1071,17 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
         which(rt$region %in% focalRegion)
       }
 
-      if(is.null(focalRegion) && focalRegion!="all"){
+      if(allOnOneMap!=TRUE){
         ### SEPARATE MAPS PER FOCAL REGIONS CASE ###
 
         for(i in rIdxList){ # Over focal regions
-          if(is.null(focalRegion)){
-            pe <- plotEmptyMap( range_lon, range_lat, projFun=projection )
-            plotMapItem( makeMapDataLatLonLines() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
-            plotMapItem( mapData                  , range_lon , range_lat, projFun=projection , plotFun=polygon, col="#f7bf25" , lwd=0.2 )
-            plotMapBorder(                          range_lon , range_lat, projFun=projection , plotEdges=pe ,lwd=4 )
-          }
+
+          pe <- plotEmptyMap( range_lon, range_lat, projFun=projection )
+          plotMapItem( makeMapDataLatLonLines() , range_lon , range_lat, projFun=projection , plotFun=lines,   col="#00000022" , lwd=.4 )
+          plotMapItem( mapData                  , range_lon , range_lat, projFun=projection , plotFun=polygon, col="#f7bf25" , lwd=0.2 )
+          plotMapBorder(                          range_lon , range_lat, projFun=projection , plotEdges=pe ,lwd=4 )
 
           for(j in 1:nrow(trt)){ # Over target regions
-            #j <- 3
             if(i==j){next}
             ldt <- curved_rounded_line(
               x1=trt$lon[i],y1 = trt$lat[i],
@@ -1112,7 +1104,6 @@ ReMIXTURE <- R6::R6Class("ReMIXTURE",
           plotMapItem(udt,projFun=projection,plotFun=polygon,col="#FFFFFF")
           title(main=trt$region[i],line=0)
         }
-
       } else {
         ### ALL OVERLAPS ON ONE MAP CASE ###
 
